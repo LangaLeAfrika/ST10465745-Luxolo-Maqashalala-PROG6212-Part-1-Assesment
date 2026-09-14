@@ -159,6 +159,9 @@ RaceDay/
 └── .github/
     └── workflows/
         └── part1-ci.yml
+
+
 ## WorkFlow Screenshot
-<img width="1900" height="1020" alt="image" src="https://github.com/user-attachments/assets/a5e4a01b-9dcd-4573-95c2-207bca95cf9c" />
+c:\Users\luxolo\OneDrive - KOUGA MUNICIPALITY\Documents\GitHub\ST10465745 Luxolo Maqashalala PROG6212 Part 1 Assesment\docs\images\Screenshot WorkFlow.png
+
 
