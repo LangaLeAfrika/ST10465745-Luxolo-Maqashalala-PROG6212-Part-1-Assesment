@@ -162,6 +162,7 @@ RaceDay/
 
 
 ## WorkFlow Screenshot
-c:\Users\luxolo\OneDrive - KOUGA MUNICIPALITY\Documents\GitHub\ST10465745 Luxolo Maqashalala PROG6212 Part 1 Assesment\docs\images\Screenshot WorkFlow.png
+<img width="1900" height="1020" alt="image" src="https://github.com/user-attachments/assets/3331b463-7611-4903-a7b6-592e5bbde2d9" />
+
 
 
