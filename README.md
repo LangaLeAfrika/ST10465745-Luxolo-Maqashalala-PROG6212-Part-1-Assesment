@@ -44,7 +44,7 @@ Participants can:
 
 ---
 
-# Part 1 Deliverables
+## Part 1 Deliverables
 
 ## Entity Relationship Diagram
 
