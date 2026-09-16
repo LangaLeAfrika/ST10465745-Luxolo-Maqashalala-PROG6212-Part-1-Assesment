@@ -40,7 +40,7 @@ Participants can:
 - Select an event category
 - View their own enrolments
 - View their race results
-- Track their performance history
+- Track their performance history.
 
 ---
 
