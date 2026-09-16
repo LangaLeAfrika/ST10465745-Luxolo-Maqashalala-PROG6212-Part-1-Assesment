@@ -68,7 +68,7 @@ The ERD identifies:
 - Relationships
 - Cardinality
 - One-to-many relationships
-- The associative Enrolment entity used to resolve the Participant/Event many-to-many relationship
+- The associative Enrolment entity used to resolve the Participant/Event many-to-many relationship...
 
 ---
 
