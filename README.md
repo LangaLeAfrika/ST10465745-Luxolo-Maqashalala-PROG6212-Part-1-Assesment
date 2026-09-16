@@ -11,7 +11,7 @@ The system supports two main user roles:
 - Organiser....
 - Participant...
 
-Part 1 focuses on system planning and database design before the API and MVC application are developed.
+Part 1 focuses on system planning and database design before the API and MVC application are developed..
 
 ---
 
