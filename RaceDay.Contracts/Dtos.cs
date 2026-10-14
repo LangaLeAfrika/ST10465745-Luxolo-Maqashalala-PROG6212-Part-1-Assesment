@@ -139,3 +139,140 @@ public class EventDto
 
     public int OrganiserId { get; set; }
 }
+// Information supplied when creating an event category.
+public class CreateCategoryRequest : IValidatableObject
+{
+    [Required]
+    [StringLength(100)]
+    public string CategoryName { get; set; } = string.Empty;
+
+    [Range(0, int.MaxValue)]
+    public int? MinimumAge { get; set; }
+
+    [Range(0, int.MaxValue)]
+    public int? MaximumAge { get; set; }
+
+    // Compare the two ages when both are provided.
+    public IEnumerable<ValidationResult> Validate(
+        ValidationContext validationContext)
+    {
+        if (MinimumAge.HasValue &&
+            MaximumAge.HasValue &&
+            MaximumAge.Value < MinimumAge.Value)
+        {
+            yield return new ValidationResult(
+                "Maximum age must be greater than or equal to minimum age.",
+                new[] { nameof(MaximumAge), nameof(MinimumAge) });
+        }
+    }
+}
+
+// Category updates use the same fields and validation.
+public class UpdateCategoryRequest : CreateCategoryRequest
+{
+}
+
+// Category information returned by the API.
+public class CategoryDto
+{
+    public int CategoryId { get; set; }
+
+    public int EventId { get; set; }
+
+    public string CategoryName { get; set; } = string.Empty;
+
+    public int? MinimumAge { get; set; }
+
+    public int? MaximumAge { get; set; }
+}
+
+// Your planned route supplies the event ID:
+// POST /api/events/{eventId}/enrolments
+// The participant ID will come from the session.
+public class CreateEnrolmentRequest
+{
+    [Range(1, int.MaxValue)]
+    public int CategoryId { get; set; }
+}
+
+// Enrolment information returned by the API.
+public class EnrolmentDto
+{
+    public int EnrolmentId { get; set; }
+
+    public int ParticipantId { get; set; }
+
+    public string ParticipantName { get; set; } = string.Empty;
+
+    public int EventId { get; set; }
+
+    public string EventName { get; set; } = string.Empty;
+
+    public int CategoryId { get; set; }
+
+    public string CategoryName { get; set; } = string.Empty;
+
+    public DateTime EnrolmentDate { get; set; }
+}
+
+// Your planned route supplies the enrolment ID:
+// POST /api/enrolments/{enrolmentId}/result
+public class CreateResultRequest : IValidatableObject
+{
+    [Required]
+    public TimeSpan? FinishTime { get; set; }
+
+    [Required]
+    [Range(1, int.MaxValue)]
+    public int? FinishingPosition { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(
+        ValidationContext validationContext)
+    {
+        if (FinishTime.HasValue)
+        {
+            TimeSpan time = FinishTime.Value;
+
+            // Your SQL script uses TIME(0):
+            // values below 24 hours, with whole-second precision.
+            if (time <= TimeSpan.Zero ||
+                time >= TimeSpan.FromDays(1))
+            {
+                yield return new ValidationResult(
+                    "Finish time must be greater than zero and less than 24 hours.",
+                    new[] { nameof(FinishTime) });
+            }
+            else if (time.Ticks % TimeSpan.TicksPerSecond != 0)
+            {
+                yield return new ValidationResult(
+                    "Finish time must use whole seconds.",
+                    new[] { nameof(FinishTime) });
+            }
+        }
+    }
+}
+
+// Result updates use the same fields and validation.
+public class UpdateResultRequest : CreateResultRequest
+{
+}
+
+// Result information returned by the API.
+public class ResultDto
+{
+    public int ResultId { get; set; }
+
+    public int EnrolmentId { get; set; }
+
+    public int EventId { get; set; }
+
+    public string EventName { get; set; } = string.Empty;
+
+    public string CategoryName { get; set; } = string.Empty;
+
+    public string ParticipantName { get; set; } = string.Empty;
+
+    public TimeSpan? FinishTime { get; set; }
+
+    public int? FinishingPosition { get; set; }
+}
