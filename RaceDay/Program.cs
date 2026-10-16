@@ -1,4 +1,14 @@
+using Microsoft.EntityFrameworkCore;
+using RaceDay.Data;
+
 var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration
+    .GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException(
+        "Connection string 'DefaultConnection' was not found.");
+
+builder.Services.AddDbContext<RaceDayDbContext>(options =>
+    options.UseSqlServer(connectionString));
 
 // Add services to the container.
 
