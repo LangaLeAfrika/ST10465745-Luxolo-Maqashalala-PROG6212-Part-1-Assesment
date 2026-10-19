@@ -104,7 +104,13 @@ public class CreateEventRequest
     public string Location { get; set; } = string.Empty;
 
     // Distance in kilometres; matches DECIMAL(6,2).
-    [Range(typeof(decimal), "0.01", "9999.99")]
+    [Range(
+    typeof(decimal),
+    "0.01",
+    "9999.99",
+    ParseLimitsInInvariantCulture = true,
+    ConvertValueInInvariantCulture = true,
+    ErrorMessage = "Distance must be between 0.01 and 9999.99 kilometres.")]
     public decimal Distance { get; set; }
 
     [Required]
