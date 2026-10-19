@@ -21,6 +21,18 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<
     IPasswordHasher<AppUser>,
     PasswordHasher<AppUser>>();
+builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+
+    options.Cookie.Name = ".RaceDay.Session";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -37,6 +49,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseRouting();
+
+app.UseSession();
 
 app.UseAuthorization();
 
