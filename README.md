@@ -17,9 +17,19 @@ session-based access control and automated tests.
 The API supports Organisers and Participants. Swagger UI provides an
 interface for exploring and testing the endpoints during development.
 
+## Implementation Notes
+
+The API project is named `RaceDay`, corresponding to the
+`RaceDay.Api` project described in the student guide.
+
+Profile endpoints use `/api/users/me`, consistent with the
+Part 1 endpoint plan. The implemented routes are documented
+in the API Routes section and Swagger.
+
 ## Presentation
 
 - [Part 1 demonstration video](https://youtu.be/r2tRXuNNo2U)
+- [Part 2 demonstration video](
 
 ## Technologies
 
