@@ -1,15 +1,59 @@
+using Microsoft.AspNetCore.Mvc;
+using RaceDay.Mvc.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    // Protect form submissions against cross-site request forgery.
+    options.Filters.Add(
+        new AutoValidateAntiforgeryTokenAttribute());
+});
+
+builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+
+    // Different name from the API's session cookie.
+    options.Cookie.Name = ".RaceDay.Mvc.Session";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+
+    options.Cookie.SecurePolicy =
+        builder.Environment.IsDevelopment()
+            ? CookieSecurePolicy.SameAsRequest
+            : CookieSecurePolicy.Always;
+});
+
+builder.Services.AddHttpContextAccessor();
+
+builder.Services
+    .AddHttpClient("RaceDayApi", client =>
+    {
+        var baseUrl = builder.Configuration["ApiSettings:BaseUrl"]
+            ?? throw new InvalidOperationException(
+                "ApiSettings:BaseUrl is missing.");
+
+        client.BaseAddress = new Uri(baseUrl);
+        client.Timeout = TimeSpan.FromSeconds(30);
+    })
+    .ConfigurePrimaryHttpMessageHandler(() =>
+        new HttpClientHandler
+        {
+            UseCookies = false,
+            AllowAutoRedirect = false
+        });
+
+builder.Services.AddScoped<RaceDayApiClient>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -17,7 +61,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseSession();
 app.UseAuthorization();
 
 app.MapControllerRoute(
