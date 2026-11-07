@@ -29,7 +29,7 @@ in the API Routes section and Swagger.
 ## Presentation
 
 - [Part 1 demonstration video](https://youtu.be/r2tRXuNNo2U)
-- [Part 2 demonstration video](
+- [Part 2 demonstration video](https://youtu.be/fj8GOFvHJZk)
 
 ## Technologies
 
