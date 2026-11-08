@@ -9,12 +9,26 @@
 <ul class="navbar-nav align-items-sm-center">
     @if (userId.HasValue)
     {
-        <li class="nav-item">
-            <span class="nav-link text-dark">
-                Hello, @displayName
-                <span class="badge bg-primary">@role</span>
-            </span>
-        </li>
+        @if (role == "Organiser")
+        {
+            <li class="nav-item">
+                <a class="nav-link text-dark"
+                   asp-controller="Organiser"
+                   asp-action="Index">
+                    Organiser dashboard
+                </a>
+            </li>
+        }
+        else if (role == "Participant")
+        {
+            <li class="nav-item">
+                <a class="nav-link text-dark"
+                   asp-controller="Participant"
+                   asp-action="Index">
+                    Participant dashboard
+                </a>
+            </li>
+        }
 
         <li class="nav-item">
             <form asp-controller="Auth"

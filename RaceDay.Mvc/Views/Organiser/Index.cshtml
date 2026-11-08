@@ -1,0 +1,16 @@
+﻿@using Microsoft.AspNetCore.Http
+
+@{
+    ViewData["Title"] = "Organiser dashboard";
+}
+
+<h1>Organiser dashboard</h1>
+
+<p class="lead">
+    Welcome, @Context.Session.GetString("DisplayName").
+</p>
+
+<p>
+    Your organiser workspace will bring together your events,
+    categories, enrolments and race results.
+</p>

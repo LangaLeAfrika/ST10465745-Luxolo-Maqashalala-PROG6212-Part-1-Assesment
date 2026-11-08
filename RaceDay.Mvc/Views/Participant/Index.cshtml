@@ -1,0 +1,16 @@
+﻿@using Microsoft.AspNetCore.Http
+
+@{
+    ViewData["Title"] = "Participant dashboard";
+}
+
+<h1>Participant dashboard</h1>
+
+<p class="lead">
+    Welcome, @Context.Session.GetString("DisplayName").
+</p>
+
+<p>
+    Your participant workspace will bring together upcoming events,
+    your entries and your race results.
+</p>
