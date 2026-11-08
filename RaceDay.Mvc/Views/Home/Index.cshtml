@@ -1,8 +1,50 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@using Microsoft.AspNetCore.Http
+
+@{
+    ViewData["Title"] = "Home";
+
+    var userId = Context.Session.GetInt32("UserId");
+    var displayName = Context.Session.GetString("DisplayName");
+    var role = Context.Session.GetString("Role");
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="text-center py-5">
+    <h1 class="display-4">RaceDay</h1>
+    <p class="lead">Run. Walk. Cycle. Be part of the event.</p>
+
+    @if (userId.HasValue)
+    {
+        <div class="card mx-auto mt-4" style="max-width: 480px;">
+            <div class="card-body">
+                <h2 class="h4">Welcome, @displayName</h2>
+                <p>
+                    Signed in as
+                    <span class="badge bg-primary">@role</span>
+                </p>
+
+                <form asp-controller="Auth"
+                      asp-action="Logout"
+                      method="post">
+                    <button type="submit"
+                            class="btn btn-outline-danger">
+                        Log out
+                    </button>
+                </form>
+            </div>
+        </div>
+    }
+    else
+    {
+        <a asp-controller="Auth"
+           asp-action="Register"
+           class="btn btn-primary me-2">
+            Create account
+        </a>
+
+        <a asp-controller="Auth"
+           asp-action="Login"
+           class="btn btn-outline-primary">
+            Log in
+        </a>
+    }
 </div>
