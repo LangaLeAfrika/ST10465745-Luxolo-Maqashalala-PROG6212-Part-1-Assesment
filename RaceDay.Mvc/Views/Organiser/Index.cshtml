@@ -1,16 +1,101 @@
-﻿@using Microsoft.AspNetCore.Http
+﻿@model RaceDay.Mvc.ViewModels.OrganiserDashboardVm
+@using Microsoft.AspNetCore.Http
 
 @{
     ViewData["Title"] = "Organiser dashboard";
 }
 
-<h1>Organiser dashboard</h1>
+<div class="mb-4">
+    <h1>Organiser dashboard</h1>
+    <p class="text-muted">
+        Welcome, @Context.Session.GetString("DisplayName").
+        Here are your events.
+    </p>
+</div>
 
-<p class="lead">
-    Welcome, @Context.Session.GetString("DisplayName").
-</p>
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h2 class="h6 text-muted">Total events</h2>
+                <p class="display-6 mb-0">@Model.TotalEvents</p>
+            </div>
+        </div>
+    </div>
 
-<p>
-    Your organiser workspace will bring together your events,
-    categories, enrolments and race results.
-</p>
+    <div class="col-md-6">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h2 class="h6 text-muted">Upcoming events</h2>
+                <p class="display-6 mb-0">@Model.UpcomingEvents</p>
+                <small class="text-muted">Includes today's events</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h2 class="h4 mb-3">My events</h2>
+
+@if (Model.Events.Count == 0)
+{
+    <div class="alert alert-info">
+        You have not created any events yet.
+    </div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0">
+                <caption class="px-3">
+                    Events belonging to your organiser account.
+                    Dates use South African time.
+                </caption>
+
+                <thead>
+                    <tr>
+                        <th scope="col">Event</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Location</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Distance</th>
+                        <th scope="col">Schedule</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var raceEvent in Model.Events)
+                    {
+                        <tr>
+                            <td class="fw-semibold">
+                                @raceEvent.EventName
+                            </td>
+                            <td class="text-nowrap">
+                                @raceEvent.EventDate.ToString("dd MMM yyyy")
+                            </td>
+                            <td>@raceEvent.Location</td>
+                            <td>@raceEvent.EventType</td>
+                            <td class="text-nowrap">
+                                @raceEvent.Distance.ToString("0.##") km
+                            </td>
+                            <td>
+                                @if (raceEvent.EventDate == Model.Today)
+                                {
+                                    <span class="badge bg-primary">Today</span>
+                                }
+                                else if (raceEvent.EventDate > Model.Today)
+                                {
+                                    <span class="badge bg-success">Upcoming</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Past</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
