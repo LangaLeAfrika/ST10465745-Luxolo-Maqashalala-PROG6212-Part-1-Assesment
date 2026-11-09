@@ -1,0 +1,69 @@
+﻿@model RaceDay.Mvc.ViewModels.EventEnrolmentsVm
+
+@{
+    ViewData["Title"] = "Event enrolments";
+}
+
+<h1>Event enrolments</h1>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h2 class="h4">@Model.Event.EventName</h2>
+
+        <p class="text-muted">
+            @Model.Event.EventDate.ToString("dd MMM yyyy")
+            &middot; @Model.Event.Location
+        </p>
+
+        <p class="mb-0">
+            <strong>Total entries:</strong>
+            <span class="badge bg-primary">@Model.TotalEntries</span>
+        </p>
+    </div>
+</div>
+
+@if (Model.Enrolments.Count == 0)
+{
+    <div class="alert alert-info">
+        No participants have entered this event yet.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <caption>
+                Participants grouped by category, then sorted by name.
+            </caption>
+
+            <thead>
+                <tr>
+                    <th scope="col">Entry number</th>
+                    <th scope="col">Participant</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Date entered</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var entry in Model.Enrolments)
+                {
+                    <tr>
+                        <td>@entry.EnrolmentId</td>
+                        <td class="fw-semibold">@entry.ParticipantName</td>
+                        <td>@entry.CategoryName</td>
+                        <td class="text-nowrap">
+                            @entry.EnrolmentDate.ToString("dd MMM yyyy")
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<a asp-controller="Organiser"
+   asp-action="Index"
+   class="btn btn-outline-secondary">
+    Back to dashboard
+</a>

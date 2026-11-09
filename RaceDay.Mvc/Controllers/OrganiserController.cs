@@ -695,6 +695,109 @@ public class OrganiserController : Controller
 
         return await Categories(id);
     }
+    [HttpGet]
+    public async Task<IActionResult> Enrolments(int id)
+    {
+        if (id <= 0)
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            // This API endpoint checks that the organiser owns the event.
+            using var enrolmentsResponse = await _api.SendAsync(
+                HttpMethod.Get,
+                $"api/events/{id}/enrolments");
+
+            if (enrolmentsResponse.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (enrolmentsResponse.StatusCode == HttpStatusCode.Forbidden)
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            if (enrolmentsResponse.StatusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (!enrolmentsResponse.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Loading enrolments for event {EventId} returned {StatusCode}.",
+                    id,
+                    enrolmentsResponse.StatusCode);
+
+                return ApiUnavailable();
+            }
+
+            var enrolments =
+                await _api.ReadAsync<List<EnrolmentDto>>(enrolmentsResponse);
+
+            if (enrolments is null)
+            {
+                return ApiUnavailable();
+            }
+
+            // Load the event name and details for the page heading.
+            using var eventResponse = await _api.SendAsync(
+                HttpMethod.Get,
+                $"api/events/{id}");
+
+            if (eventResponse.StatusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (!eventResponse.IsSuccessStatusCode)
+            {
+                return ApiUnavailable();
+            }
+
+            var raceEvent = await _api.ReadAsync<EventDto>(eventResponse);
+
+            if (raceEvent is null)
+            {
+                return ApiUnavailable();
+            }
+
+            if (raceEvent.OrganiserId !=
+                HttpContext.Session.GetInt32("UserId"))
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            var model = new EventEnrolmentsVm
+            {
+                Event = raceEvent,
+                Enrolments = enrolments
+                    .OrderBy(e => e.CategoryName)
+                    .ThenBy(e => e.ParticipantName)
+                    .ToList()
+            };
+
+            return View(model);
+        }
+        catch (Exception ex) when (
+            ex is HttpRequestException ||
+            ex is TaskCanceledException ||
+            ex is JsonException)
+        {
+            _logger.LogWarning(
+                ex,
+                "Could not load enrolments for event {EventId}.",
+                id);
+
+            return ApiUnavailable();
+        }
+    }
     private IActionResult ApiUnavailable()
     {
         Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
