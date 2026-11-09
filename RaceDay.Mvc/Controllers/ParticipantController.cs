@@ -368,9 +368,10 @@ public class ParticipantController : Controller
             }
 
             return View(results
-                .OrderBy(r => r.EventName)
-                .ThenBy(r => r.CategoryName)
-                .ToList());
+                     .OrderByDescending(r => r.EventDate)
+                     .ThenBy(r => r.EventName)
+                     .ThenBy(r => r.CategoryName)
+                     .ToList());
         }
         catch (Exception ex) when (
             ex is HttpRequestException ||

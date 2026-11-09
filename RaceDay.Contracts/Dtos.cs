@@ -267,7 +267,7 @@ public class UpdateResultRequest : CreateResultRequest
 public class ResultDto
 {
     public int ResultId { get; set; }
-
+    public DateOnly EventDate { get; set; }
     public int EnrolmentId { get; set; }
 
     public int EventId { get; set; }

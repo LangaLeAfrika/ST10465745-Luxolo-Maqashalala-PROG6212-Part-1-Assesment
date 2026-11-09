@@ -42,6 +42,7 @@ else
                 <thead>
                     <tr>
                         <th scope="col">Event</th>
+                        <th scope="col">Event date</th>
                         <th scope="col">Category</th>
                         <th scope="col">Finish time</th>
                         <th scope="col">Position</th>
@@ -53,6 +54,9 @@ else
                     {
                         <tr>
                             <td class="fw-semibold">@result.EventName</td>
+                            <td class="text-nowrap">
+                                @result.EventDate.ToString("dd MMM yyyy")
+                            </td>
                             <td>@result.CategoryName</td>
                             <td class="text-nowrap">
                                 @(result.FinishTime.HasValue

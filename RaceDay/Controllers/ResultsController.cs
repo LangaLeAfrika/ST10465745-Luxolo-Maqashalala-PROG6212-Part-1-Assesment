@@ -256,6 +256,7 @@ public class ResultsController : ControllerBase
             EnrolmentId = result.EnrolmentId,
             EventId = result.Enrolment.EventId,
             EventName = result.Enrolment.Event.EventName,
+            EventDate = result.Enrolment.Event.EventDate,
             CategoryName = result.Enrolment.Category.CategoryName,
             ParticipantName =
                 result.Enrolment.Participant.FirstName + " " +
