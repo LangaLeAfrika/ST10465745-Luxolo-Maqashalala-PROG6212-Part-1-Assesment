@@ -1,0 +1,133 @@
+﻿@model RaceDay.Mvc.ViewModels.EventCategoriesVm
+
+@{
+    ViewData["Title"] = "Event categories";
+}
+
+<h1>Event categories</h1>
+<p class="lead">@Model.Event.EventName</p>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success" role="status">
+        @success
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <h2 class="h4">Existing categories</h2>
+
+        @if (Model.Categories.Count == 0)
+        {
+            <div class="alert alert-info">
+                This event has no categories yet.
+                Add one so participants can enrol.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">Category</th>
+                            <th scope="col">Minimum age</th>
+                            <th scope="col">Maximum age</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var category in Model.Categories)
+                        {
+                            <tr>
+                                <td>@category.CategoryName</td>
+                                <td>
+                                    @(category.MinimumAge?.ToString() ?? "No minimum")
+                                </td>
+                                <td>
+                                    @(category.MaximumAge?.ToString() ?? "No maximum")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h4">Add category</h2>
+
+                <form asp-controller="Organiser"
+                      asp-action="AddCategory"
+                      asp-route-id="@Model.Event.EventId"
+                      method="post">
+
+                    <div asp-validation-summary="All"
+                         class="text-danger"
+                         role="alert"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="NewCategory.CategoryName"
+                               class="form-label">
+                            Category name
+                        </label>
+                        <input asp-for="NewCategory.CategoryName"
+                               class="form-control"
+                               maxlength="100" />
+                        <span asp-validation-for="NewCategory.CategoryName"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="NewCategory.MinimumAge"
+                               class="form-label">
+                            Minimum age
+                        </label>
+                        <input asp-for="NewCategory.MinimumAge"
+                               type="number"
+                               min="0"
+                               step="1"
+                               class="form-control" />
+                        <span asp-validation-for="NewCategory.MinimumAge"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="NewCategory.MaximumAge"
+                               class="form-label">
+                            Maximum age
+                        </label>
+                        <input asp-for="NewCategory.MaximumAge"
+                               type="number"
+                               min="0"
+                               step="1"
+                               class="form-control" />
+                        <span asp-validation-for="NewCategory.MaximumAge"
+                              class="text-danger"></span>
+                    </div>
+
+                    <p class="text-muted small">
+                        Leave an age limit blank if it does not apply.
+                    </p>
+
+                    <button type="submit" class="btn btn-primary">
+                        Add category
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<a asp-controller="Organiser"
+   asp-action="Index"
+   class="btn btn-outline-secondary mt-4">
+    Back to dashboard
+</a>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

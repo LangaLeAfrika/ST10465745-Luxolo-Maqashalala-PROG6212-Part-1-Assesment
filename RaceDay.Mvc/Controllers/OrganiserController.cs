@@ -505,6 +505,196 @@ public class OrganiserController : Controller
 
         return RedirectToAction(nameof(Index));
     }
+    // Display an event's categories and the add-category form.
+    [HttpGet]
+    public async Task<IActionResult> Categories(int id)
+    {
+        if (id <= 0)
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            using var eventResponse = await _api.SendAsync(
+                HttpMethod.Get,
+                $"api/events/{id}");
+
+            if (eventResponse.StatusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (!eventResponse.IsSuccessStatusCode)
+            {
+                return ApiUnavailable();
+            }
+
+            var raceEvent = await _api.ReadAsync<EventDto>(eventResponse);
+
+            if (raceEvent is null)
+            {
+                return ApiUnavailable();
+            }
+
+            if (raceEvent.OrganiserId !=
+                HttpContext.Session.GetInt32("UserId"))
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            using var categoriesResponse = await _api.SendAsync(
+                HttpMethod.Get,
+                $"api/events/{id}/categories");
+
+            if (categoriesResponse.StatusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (!categoriesResponse.IsSuccessStatusCode)
+            {
+                return ApiUnavailable();
+            }
+
+            var categories =
+                await _api.ReadAsync<List<CategoryDto>>(categoriesResponse);
+
+            if (categories is null)
+            {
+                return ApiUnavailable();
+            }
+
+            var model = new EventCategoriesVm
+            {
+                Event = raceEvent,
+                Categories = categories
+                    .OrderBy(c => c.CategoryName)
+                    .ToList()
+            };
+
+            return View("Categories", model);
+        }
+        catch (Exception ex) when (
+            ex is HttpRequestException ||
+            ex is TaskCanceledException ||
+            ex is JsonException)
+        {
+            _logger.LogWarning(
+                ex,
+                "Could not load categories for event {EventId}.",
+                id);
+
+            return ApiUnavailable();
+        }
+    }
+
+    // Add a category through the API.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddCategory(
+        int id,
+        [Bind(Prefix = "NewCategory")] CreateCategoryRequest request)
+    {
+        if (id <= 0)
+        {
+            return BadRequest();
+        }
+
+        if (request.MinimumAge.HasValue &&
+            request.MaximumAge.HasValue &&
+            request.MaximumAge.Value < request.MinimumAge.Value)
+        {
+            ModelState.AddModelError(
+                "NewCategory.MaximumAge",
+                "Maximum age must be greater than or equal to minimum age.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            // Reload the event and category list.
+            // ModelState preserves the submitted form values and errors.
+            return await Categories(id);
+        }
+
+        request.CategoryName = request.CategoryName.Trim();
+
+        try
+        {
+            using var response = await _api.SendAsync(
+                HttpMethod.Post,
+                $"api/events/{id}/categories",
+                request);
+
+            if (response.StatusCode == HttpStatusCode.Created)
+            {
+                TempData["Success"] = "Category added successfully.";
+
+                return RedirectToAction(
+                    nameof(Categories),
+                    new { id });
+            }
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                ModelState.AddModelError(
+                    "NewCategory.CategoryName",
+                    "This event already has a category with that name.");
+            }
+            else if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Check the category name and age limits, then try again.");
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Adding a category to event {EventId} returned {StatusCode}.",
+                    id,
+                    response.StatusCode);
+
+                ModelState.AddModelError(
+                    "",
+                    "We could not confirm the save. " +
+                    "Check the category list before trying again.");
+            }
+        }
+        catch (Exception ex) when (
+            ex is HttpRequestException ||
+            ex is TaskCanceledException)
+        {
+            _logger.LogWarning(
+                ex,
+                "Could not confirm category creation for event {EventId}.",
+                id);
+
+            ModelState.AddModelError(
+                "",
+                "The connection was interrupted. " +
+                "Check the category list before trying again.");
+        }
+
+        return await Categories(id);
+    }
     private IActionResult ApiUnavailable()
     {
         Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
