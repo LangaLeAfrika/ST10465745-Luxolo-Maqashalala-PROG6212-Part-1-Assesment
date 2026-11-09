@@ -4,6 +4,7 @@ namespace RaceDay.Mvc.ViewModels;
 
 public class EventFormVm : IValidatableObject
 {
+    public int EventId { get; set; }
     [Required]
     [StringLength(200)]
     [Display(Name = "Event name")]

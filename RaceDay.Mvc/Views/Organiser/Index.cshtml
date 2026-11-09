@@ -75,6 +75,7 @@ else
                         <th scope="col">Type</th>
                         <th scope="col">Distance</th>
                         <th scope="col">Schedule</th>
+                        <th scope="col">Actions</th>
                     </tr>
                 </thead>
 
@@ -106,6 +107,14 @@ else
                                 {
                                     <span class="badge bg-secondary">Past</span>
                                 }
+                            </td>
+                               <td>
+                                <a asp-controller="Organiser"
+                                   asp-action="Edit"
+                                   asp-route-id="@raceEvent.EventId"
+                                   class="btn btn-outline-primary btn-sm">
+                                    Edit
+                                </a>
                             </td>
                         </tr>
                     }

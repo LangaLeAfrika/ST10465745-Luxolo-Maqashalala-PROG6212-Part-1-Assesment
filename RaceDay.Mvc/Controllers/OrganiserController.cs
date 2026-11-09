@@ -191,7 +191,176 @@ public class OrganiserController : Controller
 
         return View(model);
     }
+    // Load an existing event into the edit form.
+    [HttpGet]
+    public async Task<IActionResult> Edit(int id)
+    {
+        if (id <= 0)
+        {
+            return NotFound();
+        }
 
+        try
+        {
+            using var response = await _api.SendAsync(
+                HttpMethod.Get,
+                $"api/events/{id}");
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return ApiUnavailable();
+            }
+
+            var raceEvent = await _api.ReadAsync<EventDto>(response);
+
+            if (raceEvent is null)
+            {
+                return ApiUnavailable();
+            }
+
+            // The event details endpoint is public, so check ownership
+            // before displaying the organiser's edit form.
+            var userId = HttpContext.Session.GetInt32("UserId");
+
+            if (raceEvent.OrganiserId != userId)
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            var model = new EventFormVm
+            {
+                EventId = raceEvent.EventId,
+                EventName = raceEvent.EventName,
+                Description = raceEvent.Description,
+                EventDate = raceEvent.EventDate,
+                Location = raceEvent.Location,
+                Distance = raceEvent.Distance,
+                EventType = raceEvent.EventType
+            };
+
+            return View(model);
+        }
+        catch (Exception ex) when (
+            ex is HttpRequestException ||
+            ex is TaskCanceledException ||
+            ex is JsonException)
+        {
+            _logger.LogWarning(ex, "Could not load event {EventId}.", id);
+
+            return ApiUnavailable();
+        }
+    }
+
+    // Send the updated event to the API.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(int id, EventFormVm model)
+    {
+        if (id <= 0 || id != model.EventId)
+        {
+            return BadRequest();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var request = new UpdateEventRequest
+        {
+            EventName = model.EventName.Trim(),
+            Description = string.IsNullOrWhiteSpace(model.Description)
+                ? null
+                : model.Description.Trim(),
+            EventDate = model.EventDate!.Value,
+            Location = model.Location.Trim(),
+            Distance = model.Distance!.Value,
+            EventType = model.EventType
+        };
+
+        try
+        {
+            using var response = await _api.SendAsync(
+                HttpMethod.Put,
+                $"api/events/{id}",
+                request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["Success"] = "Event updated successfully.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Auth");
+            }
+
+            // The API independently checks ownership when saving.
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "The API rejected the event details. Check the date, " +
+                    "distance and required fields.");
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Updating event {EventId} returned {StatusCode}.",
+                    id,
+                    response.StatusCode);
+
+                ModelState.AddModelError(
+                    "",
+                    "We could not confirm the update. " +
+                    "Check your dashboard before trying again.");
+            }
+        }
+        catch (Exception ex) when (
+            ex is HttpRequestException ||
+            ex is TaskCanceledException)
+        {
+            _logger.LogWarning(ex, "Could not confirm update for event {EventId}.", id);
+
+            ModelState.AddModelError(
+                "",
+                "The connection was interrupted. " +
+                "Check your dashboard before trying again.");
+        }
+
+        return View(model);
+    }
     private IActionResult ApiUnavailable()
     {
         Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
