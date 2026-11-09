@@ -1,0 +1,49 @@
+﻿@model RaceDay.Mvc.ViewModels.CategoryFormVm
+
+@{
+    ViewData["Title"] = "Delete category";
+}
+
+<h1>Delete category</h1>
+<p class="lead">@Model.EventName</p>
+
+<div class="alert alert-warning">
+    Delete <strong>@Model.CategoryName</strong>?
+    This action cannot be undone.
+    Categories with enrolled participants cannot be deleted.
+</div>
+
+<div asp-validation-summary="All"
+     class="text-danger"
+     role="alert"></div>
+
+<dl class="row">
+    <dt class="col-sm-3">Minimum age</dt>
+    <dd class="col-sm-9">
+        @(Model.MinimumAge?.ToString() ?? "No minimum")
+    </dd>
+
+    <dt class="col-sm-3">Maximum age</dt>
+    <dd class="col-sm-9">
+        @(Model.MaximumAge?.ToString() ?? "No maximum")
+    </dd>
+</dl>
+
+<form asp-controller="Organiser"
+      asp-action="DeleteCategory"
+      asp-route-id="@Model.CategoryId"
+      method="post">
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-danger">
+            Yes, delete this category
+        </button>
+
+        <a asp-controller="Organiser"
+           asp-action="Categories"
+           asp-route-id="@Model.EventId"
+           class="btn btn-outline-secondary">
+            Cancel
+        </a>
+    </div>
+</form>

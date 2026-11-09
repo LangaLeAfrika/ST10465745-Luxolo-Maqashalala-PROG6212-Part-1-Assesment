@@ -1286,6 +1286,294 @@ public class OrganiserController : Controller
 
         return View("EditResult", trustedModel);
     }
+    [HttpGet]
+    public Task<IActionResult> EditCategory(int id)
+    {
+        return LoadCategoryPage(id, "EditCategory");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditCategory(
+        int id,
+        CategoryFormVm model)
+    {
+        if (id <= 0 || id != model.CategoryId)
+        {
+            return BadRequest();
+        }
+
+        var page = await LoadCategoryPage(id, "EditCategory");
+
+        if (page is not ViewResult view ||
+            view.Model is not CategoryFormVm trustedModel)
+        {
+            return page;
+        }
+
+        trustedModel.CategoryName = model.CategoryName;
+        trustedModel.MinimumAge = model.MinimumAge;
+        trustedModel.MaximumAge = model.MaximumAge;
+
+        if (!ModelState.IsValid)
+        {
+            return View("EditCategory", trustedModel);
+        }
+
+        var request = new UpdateCategoryRequest
+        {
+            CategoryName = model.CategoryName.Trim(),
+            MinimumAge = model.MinimumAge,
+            MaximumAge = model.MaximumAge
+        };
+
+        try
+        {
+            using var response = await _api.SendAsync(
+                HttpMethod.Put,
+                $"api/categories/{id}",
+                request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["Success"] = "Category updated successfully.";
+
+                return RedirectToAction(
+                    nameof(Categories),
+                    new { id = trustedModel.EventId });
+            }
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                ModelState.AddModelError(
+                    nameof(model.CategoryName),
+                    "This event already has a category with that name.");
+            }
+            else if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Check the category name and age limits.");
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Updating category {CategoryId} returned {StatusCode}.",
+                    id,
+                    response.StatusCode);
+
+                ModelState.AddModelError(
+                    "",
+                    "We could not confirm the update. " +
+                    "Check the category list before trying again.");
+            }
+        }
+        catch (Exception ex) when (
+            ex is HttpRequestException ||
+            ex is TaskCanceledException)
+        {
+            _logger.LogWarning(
+                ex,
+                "Could not confirm update of category {CategoryId}.",
+                id);
+
+            ModelState.AddModelError(
+                "",
+                "The connection was interrupted. " +
+                "Check the category list before trying again.");
+        }
+
+        return View("EditCategory", trustedModel);
+    }
+    [HttpGet]
+    public Task<IActionResult> DeleteCategory(int id)
+    {
+        return LoadCategoryPage(id, "DeleteCategory");
+    }
+
+    [HttpPost]
+    [ActionName("DeleteCategory")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteCategoryConfirmed(int id)
+    {
+        var page = await LoadCategoryPage(id, "DeleteCategory");
+
+        if (page is not ViewResult view ||
+            view.Model is not CategoryFormVm model)
+        {
+            return page;
+        }
+
+        try
+        {
+            using var response = await _api.SendAsync(
+                HttpMethod.Delete,
+                $"api/categories/{id}");
+
+            if (response.StatusCode == HttpStatusCode.NoContent)
+            {
+                TempData["Success"] = "Category deleted successfully.";
+
+                return RedirectToAction(
+                    nameof(Categories),
+                    new { id = model.EventId });
+            }
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "This category cannot be deleted because participants " +
+                    "are enrolled in it.");
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Deleting category {CategoryId} returned {StatusCode}.",
+                    id,
+                    response.StatusCode);
+
+                ModelState.AddModelError(
+                    "",
+                    "We could not confirm the deletion. " +
+                    "Check the category list before trying again.");
+            }
+        }
+        catch (Exception ex) when (
+            ex is HttpRequestException ||
+            ex is TaskCanceledException)
+        {
+            _logger.LogWarning(
+                ex,
+                "Could not confirm deletion of category {CategoryId}.",
+                id);
+
+            ModelState.AddModelError(
+                "",
+                "The connection was interrupted. " +
+                "Check the category list before trying again.");
+        }
+
+        return View("DeleteCategory", model);
+    }
+    private async Task<IActionResult> LoadCategoryPage(
+    int id,
+    string viewName)
+    {
+        if (id <= 0)
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            using var categoryResponse = await _api.SendAsync(
+                HttpMethod.Get,
+                $"api/categories/{id}");
+
+            if (categoryResponse.StatusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (!categoryResponse.IsSuccessStatusCode)
+            {
+                return ApiUnavailable();
+            }
+
+            var category =
+                await _api.ReadAsync<CategoryDto>(categoryResponse);
+
+            if (category is null)
+            {
+                return ApiUnavailable();
+            }
+
+            using var eventResponse = await _api.SendAsync(
+                HttpMethod.Get,
+                $"api/events/{category.EventId}");
+
+            if (eventResponse.StatusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (!eventResponse.IsSuccessStatusCode)
+            {
+                return ApiUnavailable();
+            }
+
+            var raceEvent = await _api.ReadAsync<EventDto>(eventResponse);
+
+            if (raceEvent is null)
+            {
+                return ApiUnavailable();
+            }
+
+            if (raceEvent.OrganiserId !=
+                HttpContext.Session.GetInt32("UserId"))
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            return View(viewName, new CategoryFormVm
+            {
+                CategoryId = category.CategoryId,
+                EventId = category.EventId,
+                EventName = raceEvent.EventName,
+                CategoryName = category.CategoryName,
+                MinimumAge = category.MinimumAge,
+                MaximumAge = category.MaximumAge
+            });
+        }
+        catch (Exception ex) when (
+            ex is HttpRequestException ||
+            ex is TaskCanceledException ||
+            ex is JsonException)
+        {
+            _logger.LogWarning(
+                ex,
+                "Could not load category {CategoryId}.",
+                id);
+
+            return ApiUnavailable();
+        }
+    }
     private IActionResult ApiUnavailable()
     {
         Response.StatusCode = StatusCodes.Status503ServiceUnavailable;

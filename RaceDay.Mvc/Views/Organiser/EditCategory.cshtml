@@ -1,0 +1,76 @@
+﻿@model RaceDay.Mvc.ViewModels.CategoryFormVm
+
+@{
+    ViewData["Title"] = "Edit category";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <h1>Edit category</h1>
+        <p class="lead">@Model.EventName</p>
+
+        <form asp-controller="Organiser"
+              asp-action="EditCategory"
+              asp-route-id="@Model.CategoryId"
+              method="post">
+
+            <input asp-for="CategoryId" type="hidden" />
+
+            <div asp-validation-summary="All"
+                 class="text-danger"
+                 role="alert"></div>
+
+            <div class="mb-3">
+                <label asp-for="CategoryName" class="form-label"></label>
+                <input asp-for="CategoryName"
+                       class="form-control"
+                       maxlength="100" />
+                <span asp-validation-for="CategoryName"
+                      class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="MinimumAge" class="form-label"></label>
+                <input asp-for="MinimumAge"
+                       type="number"
+                       min="0"
+                       step="1"
+                       class="form-control" />
+                <span asp-validation-for="MinimumAge"
+                      class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="MaximumAge" class="form-label"></label>
+                <input asp-for="MaximumAge"
+                       type="number"
+                       min="0"
+                       step="1"
+                       class="form-control" />
+                <span asp-validation-for="MaximumAge"
+                      class="text-danger"></span>
+            </div>
+
+            <p class="text-muted">
+                Leave an age limit blank if it does not apply.
+            </p>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    Save changes
+                </button>
+
+                <a asp-controller="Organiser"
+                   asp-action="Categories"
+                   asp-route-id="@Model.EventId"
+                   class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

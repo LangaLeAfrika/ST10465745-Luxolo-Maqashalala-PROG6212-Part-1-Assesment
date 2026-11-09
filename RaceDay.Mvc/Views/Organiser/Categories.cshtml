@@ -34,6 +34,7 @@
                             <th scope="col">Category</th>
                             <th scope="col">Minimum age</th>
                             <th scope="col">Maximum age</th>
+                            <th scope="col">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -46,6 +47,23 @@
                                 </td>
                                 <td>
                                     @(category.MaximumAge?.ToString() ?? "No maximum")
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <a asp-controller="Organiser"
+                                           asp-action="EditCategory"
+                                           asp-route-id="@category.CategoryId"
+                                           class="btn btn-outline-primary btn-sm">
+                                            Edit
+                                        </a>
+
+                                        <a asp-controller="Organiser"
+                                           asp-action="DeleteCategory"
+                                           asp-route-id="@category.CategoryId"
+                                           class="btn btn-outline-danger btn-sm">
+                                            Delete
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         }
