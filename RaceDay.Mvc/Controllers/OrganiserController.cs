@@ -994,6 +994,106 @@ public class OrganiserController : Controller
 
         return View("CaptureResult", trustedModel);
     }
+    [HttpGet]
+    public async Task<IActionResult> Results(int id)
+    {
+        if (id <= 0)
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            // The API checks event ownership before returning results.
+            using var resultsResponse = await _api.SendAsync(
+                HttpMethod.Get,
+                $"api/events/{id}/results");
+
+            if (resultsResponse.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (resultsResponse.StatusCode == HttpStatusCode.Forbidden)
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            if (resultsResponse.StatusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (!resultsResponse.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Loading results for event {EventId} returned {StatusCode}.",
+                    id,
+                    resultsResponse.StatusCode);
+
+                return ApiUnavailable();
+            }
+
+            var results =
+                await _api.ReadAsync<List<ResultDto>>(resultsResponse);
+
+            if (results is null)
+            {
+                return ApiUnavailable();
+            }
+
+            using var eventResponse = await _api.SendAsync(
+                HttpMethod.Get,
+                $"api/events/{id}");
+
+            if (eventResponse.StatusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (!eventResponse.IsSuccessStatusCode)
+            {
+                return ApiUnavailable();
+            }
+
+            var raceEvent = await _api.ReadAsync<EventDto>(eventResponse);
+
+            if (raceEvent is null)
+            {
+                return ApiUnavailable();
+            }
+
+            if (raceEvent.OrganiserId !=
+                HttpContext.Session.GetInt32("UserId"))
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            return View(new EventResultsVm
+            {
+                Event = raceEvent,
+                Results = results
+                    .OrderBy(r => r.FinishingPosition ?? int.MaxValue)
+                    .ThenBy(r => r.ParticipantName)
+                    .ToList()
+            });
+        }
+        catch (Exception ex) when (
+            ex is HttpRequestException ||
+            ex is TaskCanceledException ||
+            ex is JsonException)
+        {
+            _logger.LogWarning(
+                ex,
+                "Could not load results for event {EventId}.",
+                id);
+
+            return ApiUnavailable();
+        }
+    }
     private IActionResult ApiUnavailable()
     {
         Response.StatusCode = StatusCodes.Status503ServiceUnavailable;

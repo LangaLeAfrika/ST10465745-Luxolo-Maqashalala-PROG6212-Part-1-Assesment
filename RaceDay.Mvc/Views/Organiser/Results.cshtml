@@ -1,0 +1,93 @@
+﻿@model RaceDay.Mvc.ViewModels.EventResultsVm
+
+@{
+    ViewData["Title"] = "Event results";
+}
+
+<h1>Event results</h1>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h2 class="h4">@Model.Event.EventName</h2>
+
+        <p class="text-muted">
+            @Model.Event.EventDate.ToString("dd MMM yyyy")
+            &middot; @Model.Event.Location
+        </p>
+
+        <p class="mb-0">
+            <strong>Recorded results:</strong> @Model.Results.Count
+        </p>
+    </div>
+</div>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success" role="status">
+        @success
+    </div>
+}
+
+@if (Model.Results.Count == 0)
+{
+    <div class="alert alert-info">
+        No results have been recorded for this event yet.
+        Open Enrolments to capture participant results.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <caption>
+                Results sorted by recorded finishing position.
+                Times are shown as hours:minutes:seconds.
+            </caption>
+
+            <thead>
+                <tr>
+                    <th scope="col">Position</th>
+                    <th scope="col">Participant</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Finish time</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var result in Model.Results)
+                {
+                    <tr>
+                        <td>
+                            @(result.FinishingPosition?.ToString()
+                                ?? "Not recorded")
+                        </td>
+                        <td class="fw-semibold">
+                            @result.ParticipantName
+                        </td>
+                        <td>@result.CategoryName</td>
+                        <td class="text-nowrap">
+                            @(result.FinishTime.HasValue
+                                ? result.FinishTime.Value.ToString(@"hh\:mm\:ss")
+                                : "Not recorded")
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<div class="d-flex flex-wrap gap-2 mt-4">
+    <a asp-controller="Organiser"
+       asp-action="Enrolments"
+       asp-route-id="@Model.Event.EventId"
+       class="btn btn-primary">
+        View enrolments
+    </a>
+
+    <a asp-controller="Organiser"
+       asp-action="Index"
+       class="btn btn-outline-secondary">
+        Back to dashboard
+    </a>
+</div>

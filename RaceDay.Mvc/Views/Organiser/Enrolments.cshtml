@@ -76,6 +76,12 @@ else
         </table>
     </div>
 }
+<a asp-controller="Organiser"
+   asp-action="Results"
+   asp-route-id="@Model.Event.EventId"
+   class="btn btn-outline-primary">
+    View recorded results
+</a>
 
 <a asp-controller="Organiser"
    asp-action="Index"
