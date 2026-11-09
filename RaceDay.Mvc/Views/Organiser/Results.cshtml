@@ -50,6 +50,7 @@ else
                     <th scope="col">Participant</th>
                     <th scope="col">Category</th>
                     <th scope="col">Finish time</th>
+                    <th scope="col">Actions</th>
                 </tr>
             </thead>
 
@@ -69,6 +70,15 @@ else
                             @(result.FinishTime.HasValue
                                 ? result.FinishTime.Value.ToString(@"hh\:mm\:ss")
                                 : "Not recorded")
+                        </td>
+                        <td>
+                            <a asp-controller="Organiser"
+                               asp-action="EditResult"
+                               asp-route-eventId="@Model.Event.EventId"
+                               asp-route-id="@result.ResultId"
+                               class="btn btn-outline-primary btn-sm">
+                                Edit result
+                            </a>
                         </td>
                     </tr>
                 }

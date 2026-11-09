@@ -1094,6 +1094,198 @@ public class OrganiserController : Controller
             return ApiUnavailable();
         }
     }
+    [HttpGet]
+    public async Task<IActionResult> EditResult(int eventId, int id)
+    {
+        if (eventId <= 0 || id <= 0)
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            // This endpoint checks that the organiser owns the event.
+            using var response = await _api.SendAsync(
+                HttpMethod.Get,
+                $"api/events/{eventId}/results");
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return ApiUnavailable();
+            }
+
+            var results = await _api.ReadAsync<List<ResultDto>>(response);
+
+            if (results is null)
+            {
+                return ApiUnavailable();
+            }
+
+            var result = results.FirstOrDefault(
+                r => r.ResultId == id && r.EventId == eventId);
+
+            if (result is null)
+            {
+                return NotFound();
+            }
+
+            return View("EditResult", new CaptureResultVm
+            {
+                ResultId = result.ResultId,
+                EventId = result.EventId,
+                EnrolmentId = result.EnrolmentId,
+                EventName = result.EventName,
+                ParticipantName = result.ParticipantName,
+                CategoryName = result.CategoryName,
+                FinishTime = result.FinishTime.HasValue
+                    ? result.FinishTime.Value.ToString(@"hh\:mm\:ss")
+                    : "",
+                FinishingPosition = result.FinishingPosition
+            });
+        }
+        catch (Exception ex) when (
+            ex is HttpRequestException ||
+            ex is TaskCanceledException ||
+            ex is JsonException)
+        {
+            _logger.LogWarning(
+                ex,
+                "Could not load result {ResultId} for editing.",
+                id);
+
+            return ApiUnavailable();
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditResult(
+        int eventId,
+        int id,
+        CaptureResultVm model)
+    {
+        if (eventId <= 0 ||
+            id <= 0 ||
+            eventId != model.EventId ||
+            id != model.ResultId)
+        {
+            return BadRequest();
+        }
+
+        // Reload the saved result and verify event ownership.
+        var page = await EditResult(eventId, id);
+
+        if (page is not ViewResult view ||
+            view.Model is not CaptureResultVm trustedModel)
+        {
+            return page;
+        }
+
+        trustedModel.FinishTime = model.FinishTime;
+        trustedModel.FinishingPosition = model.FinishingPosition;
+
+        if (!ModelState.IsValid)
+        {
+            return View("EditResult", trustedModel);
+        }
+
+        var request = new UpdateResultRequest
+        {
+            FinishTime = TimeSpan.ParseExact(
+                model.FinishTime,
+                @"hh\:mm\:ss",
+                CultureInfo.InvariantCulture),
+            FinishingPosition = model.FinishingPosition!.Value
+        };
+
+        try
+        {
+            using var response = await _api.SendAsync(
+                HttpMethod.Put,
+                $"api/results/{id}",
+                request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["Success"] = "Result updated successfully.";
+
+                return RedirectToAction(
+                    nameof(Results),
+                    new { id = eventId });
+            }
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "The API rejected the update. Check the finish time, " +
+                    "position and event date. Results cannot be recorded " +
+                    "for future events.");
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Updating result {ResultId} returned {StatusCode}.",
+                    id,
+                    response.StatusCode);
+
+                ModelState.AddModelError(
+                    "",
+                    "We could not confirm the update. " +
+                    "Check the recorded results before trying again.");
+            }
+        }
+        catch (Exception ex) when (
+            ex is HttpRequestException ||
+            ex is TaskCanceledException)
+        {
+            _logger.LogWarning(
+                ex,
+                "Could not confirm the update of result {ResultId}.",
+                id);
+
+            ModelState.AddModelError(
+                "",
+                "The connection was interrupted. The update may have been saved. " +
+                "Check the recorded results before trying again.");
+        }
+
+        return View("EditResult", trustedModel);
+    }
     private IActionResult ApiUnavailable()
     {
         Response.StatusCode = StatusCodes.Status503ServiceUnavailable;

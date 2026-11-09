@@ -6,6 +6,7 @@ namespace RaceDay.Mvc.ViewModels;
 
 public class CaptureResultVm : IValidatableObject
 {
+    public int ResultId { get; set; }
     public int EventId { get; set; }
 
     public int EnrolmentId { get; set; }
