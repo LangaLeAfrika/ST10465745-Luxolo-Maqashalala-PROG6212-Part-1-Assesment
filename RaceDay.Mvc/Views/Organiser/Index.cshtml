@@ -5,6 +5,21 @@
     ViewData["Title"] = "Organiser dashboard";
 }
 
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success" role="status">
+        @success
+    </div>
+}
+
+<div class="mb-3">
+    <a asp-controller="Organiser"
+       asp-action="Create"
+       class="btn btn-primary">
+        Create event
+    </a>
+</div>
+
 <div class="mb-4">
     <h1>Organiser dashboard</h1>
     <p class="text-muted">
