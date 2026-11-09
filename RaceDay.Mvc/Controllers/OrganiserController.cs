@@ -69,15 +69,56 @@ public class OrganiserController : Controller
                 DateTimeOffset.UtcNow
                     .ToOffset(TimeSpan.FromHours(2))
                     .DateTime);
+            var enrolmentCounts = new Dictionary<int, int>();
+
+            foreach (var raceEvent in events)
+            {
+                using var enrolmentsResponse = await _api.SendAsync(
+                    HttpMethod.Get,
+                    $"api/events/{raceEvent.EventId}/enrolments");
+
+                if (enrolmentsResponse.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    HttpContext.Session.Clear();
+                    return RedirectToAction("Login", "Auth");
+                }
+
+                if (enrolmentsResponse.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    Response.StatusCode = StatusCodes.Status403Forbidden;
+                    return View("~/Views/Shared/AccessDenied.cshtml");
+                }
+
+                if (!enrolmentsResponse.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning(
+                        "Loading enrolment count for event {EventId} returned {StatusCode}.",
+                        raceEvent.EventId,
+                        enrolmentsResponse.StatusCode);
+
+                    return ApiUnavailable();
+                }
+
+                var enrolments =
+                    await _api.ReadAsync<List<EnrolmentDto>>(enrolmentsResponse);
+
+                if (enrolments is null)
+                {
+                    return ApiUnavailable();
+                }
+
+                enrolmentCounts[raceEvent.EventId] = enrolments.Count;
+            }
 
             var model = new OrganiserDashboardVm
             {
                 Today = today,
+                EnrolmentCounts = enrolmentCounts,
                 Events = events
-                    .OrderBy(e => e.EventDate < today)
-                    .ThenBy(e => e.EventDate)
-                    .ThenBy(e => e.EventName)
-                    .ToList()
+        .OrderBy(e => e.EventDate < today)
+        .ThenBy(e => e.EventDate)
+        .ThenBy(e => e.EventName)
+        .ToList()
             };
 
             return View(model);

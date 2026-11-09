@@ -8,8 +8,12 @@ public class OrganiserDashboardVm
 
     public DateOnly Today { get; set; }
 
+    public Dictionary<int, int> EnrolmentCounts { get; set; } = new();
+
     public int TotalEvents => Events.Count;
 
     public int UpcomingEvents =>
         Events.Count(e => e.EventDate >= Today);
+
+    public int TotalEnrolments => EnrolmentCounts.Values.Sum();
 }
