@@ -11,6 +11,12 @@
         @success
     </div>
 }
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-warning" role="alert">
+        @error
+    </div>
+}
 
 <div class="mb-3">
     <a asp-controller="Organiser"
@@ -108,13 +114,22 @@ else
                                     <span class="badge bg-secondary">Past</span>
                                 }
                             </td>
-                               <td>
-                                <a asp-controller="Organiser"
-                                   asp-action="Edit"
-                                   asp-route-id="@raceEvent.EventId"
-                                   class="btn btn-outline-primary btn-sm">
-                                    Edit
-                                </a>
+                              <td>
+                                <div class="d-flex gap-2">
+                                    <a asp-controller="Organiser"
+                                       asp-action="Edit"
+                                       asp-route-id="@raceEvent.EventId"
+                                       class="btn btn-outline-primary btn-sm">
+                                        Edit
+                                    </a>
+
+                                    <a asp-controller="Organiser"
+                                       asp-action="Delete"
+                                       asp-route-id="@raceEvent.EventId"
+                                       class="btn btn-outline-danger btn-sm">
+                                        Delete
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     }

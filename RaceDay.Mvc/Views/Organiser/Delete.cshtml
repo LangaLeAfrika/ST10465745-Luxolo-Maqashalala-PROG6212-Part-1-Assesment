@@ -1,0 +1,62 @@
+﻿@model RaceDay.Contracts.EventDto
+
+@{
+    ViewData["Title"] = "Delete event";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h1>Delete event</h1>
+
+        <div class="alert alert-warning">
+            <strong>Are you sure you want to delete this event?</strong>
+            <p class="mb-0">
+                This action cannot be undone.
+                Any categories belonging to the event will also be removed.
+                Events with enrolled participants cannot be deleted.
+            </p>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h4">@Model.EventName</h2>
+
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Date</dt>
+                    <dd class="col-sm-8">
+                        @Model.EventDate.ToString("dd MMM yyyy")
+                    </dd>
+
+                    <dt class="col-sm-4">Location</dt>
+                    <dd class="col-sm-8">@Model.Location</dd>
+
+                    <dt class="col-sm-4">Type</dt>
+                    <dd class="col-sm-8">@Model.EventType</dd>
+
+                    <dt class="col-sm-4">Distance</dt>
+                    <dd class="col-sm-8">
+                        @Model.Distance.ToString("0.##") km
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <form asp-controller="Organiser"
+              asp-action="Delete"
+              asp-route-id="@Model.EventId"
+              method="post">
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-danger">
+                    Yes, delete this event
+                </button>
+
+                <a asp-controller="Organiser"
+                   asp-action="Index"
+                   class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>

@@ -361,6 +361,150 @@ public class OrganiserController : Controller
 
         return View(model);
     }
+    // Show the confirmation page without deleting anything.
+    [HttpGet]
+    public async Task<IActionResult> Delete(int id)
+    {
+        if (id <= 0)
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            using var response = await _api.SendAsync(
+                HttpMethod.Get,
+                $"api/events/{id}");
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return ApiUnavailable();
+            }
+
+            var raceEvent = await _api.ReadAsync<EventDto>(response);
+
+            if (raceEvent is null)
+            {
+                return ApiUnavailable();
+            }
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+
+            if (raceEvent.OrganiserId != userId)
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            return View(raceEvent);
+        }
+        catch (Exception ex) when (
+            ex is HttpRequestException ||
+            ex is TaskCanceledException ||
+            ex is JsonException)
+        {
+            _logger.LogWarning(
+                ex,
+                "Could not load event {EventId} for deletion.",
+                id);
+
+            return ApiUnavailable();
+        }
+    }
+
+    // Delete only after the confirmation form is submitted.
+    [HttpPost]
+    [ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteConfirmed(int id)
+    {
+        if (id <= 0)
+        {
+            return BadRequest();
+        }
+
+        try
+        {
+            using var response = await _api.SendAsync(
+                HttpMethod.Delete,
+                $"api/events/{id}");
+
+            if (response.StatusCode == HttpStatusCode.NoContent)
+            {
+                TempData["Success"] = "Event deleted successfully.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                TempData["Error"] =
+                    "That event no longer exists. It may already have been deleted.";
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                TempData["Error"] =
+                    "This event cannot be deleted because participants are enrolled.";
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            _logger.LogWarning(
+                "Deleting event {EventId} returned {StatusCode}.",
+                id,
+                response.StatusCode);
+
+            TempData["Error"] =
+                "We could not confirm the deletion. " +
+                "Check the event list before trying again.";
+        }
+        catch (Exception ex) when (
+            ex is HttpRequestException ||
+            ex is TaskCanceledException)
+        {
+            _logger.LogWarning(
+                ex,
+                "Could not confirm deletion of event {EventId}.",
+                id);
+
+            TempData["Error"] =
+                "The connection was interrupted. " +
+                "Check the event list before trying again.";
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
     private IActionResult ApiUnavailable()
     {
         Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
