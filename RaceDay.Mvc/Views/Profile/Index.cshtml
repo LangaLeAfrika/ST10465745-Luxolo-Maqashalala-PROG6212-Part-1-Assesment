@@ -1,0 +1,90 @@
+﻿@model RaceDay.Mvc.ViewModels.ProfileVm
+
+@{
+    ViewData["Title"] = "My profile";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <h1>My profile</h1>
+        <p class="text-muted">
+            Keep your name and contact email up to date.
+        </p>
+
+        @if (TempData["Success"] is string success)
+        {
+            <div class="alert alert-success" role="status">
+                @success
+            </div>
+        }
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form asp-controller="Profile"
+                      asp-action="Index"
+                      method="post">
+
+                    <div asp-validation-summary="All"
+                         class="text-danger"
+                         role="alert"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="FirstName"
+                               class="form-label"></label>
+                        <input asp-for="FirstName"
+                               class="form-control"
+                               maxlength="100"
+                               autocomplete="given-name" />
+                        <span asp-validation-for="FirstName"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="LastName"
+                               class="form-label"></label>
+                        <input asp-for="LastName"
+                               class="form-control"
+                               maxlength="100"
+                               autocomplete="family-name" />
+                        <span asp-validation-for="LastName"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email"
+                               class="form-label"></label>
+                        <input asp-for="Email"
+                               type="email"
+                               class="form-control"
+                               maxlength="255"
+                               autocomplete="email"
+                               aria-describedby="email-help" />
+                        <span asp-validation-for="Email"
+                              class="text-danger"></span>
+
+                        <div id="email-help" class="form-text">
+                            If you change your email, use the new address
+                            the next time you log in.
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            Save profile
+                        </button>
+
+                        <a asp-controller="Home"
+                           asp-action="Index"
+                           class="btn btn-outline-secondary">
+                            Back to home
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
