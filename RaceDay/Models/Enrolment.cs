@@ -14,6 +14,9 @@ public class Enrolment
 
     public DateTime EnrolmentDate { get; set; }
 
+    // Entries are accepted immediately; no approval workflow is configured.
+    public string Status { get; set; } = "Confirmed";
+
     public AppUser Participant { get; set; } = null!;
 
     public Event Event { get; set; } = null!;

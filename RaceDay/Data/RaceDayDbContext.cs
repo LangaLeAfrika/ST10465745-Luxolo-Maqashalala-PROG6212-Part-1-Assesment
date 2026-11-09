@@ -174,6 +174,11 @@ public class RaceDayDbContext : DbContext
                 .HasColumnType("datetime2")
                 .HasDefaultValueSql("SYSDATETIME()");
 
+            entity.Property(e => e.Status)
+                .IsRequired()
+                .HasMaxLength(20)
+                .HasDefaultValue("Confirmed");
+
             // A participant may enter each event only once.
             entity.HasIndex(e => new
             {

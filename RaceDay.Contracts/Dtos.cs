@@ -219,6 +219,7 @@ public class EnrolmentDto
     public string CategoryName { get; set; } = string.Empty;
 
     public DateTime EnrolmentDate { get; set; }
+    public string Status { get; set; } = string.Empty;
 }
 
 // Your planned route supplies the enrolment ID:

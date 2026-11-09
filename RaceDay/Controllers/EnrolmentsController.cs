@@ -139,7 +139,8 @@ public class EnrolmentsController : ControllerBase
             EventName = raceEvent.EventName,
             CategoryId = category.CategoryId,
             CategoryName = category.CategoryName,
-            EnrolmentDate = enrolment.EnrolmentDate
+            EnrolmentDate = enrolment.EnrolmentDate,
+            Status = enrolment.Status
         });
     }
 
@@ -264,7 +265,8 @@ public class EnrolmentsController : ControllerBase
             EventName = e.Event.EventName,
             CategoryId = e.CategoryId,
             CategoryName = e.Category.CategoryName,
-            EnrolmentDate = e.EnrolmentDate
+            EnrolmentDate = e.EnrolmentDate,
+            Status = e.Status
         });
     }
 }
