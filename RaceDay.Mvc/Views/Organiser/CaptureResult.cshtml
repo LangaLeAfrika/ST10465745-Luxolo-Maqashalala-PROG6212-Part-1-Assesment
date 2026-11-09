@@ -1,0 +1,88 @@
+﻿@model RaceDay.Mvc.ViewModels.CaptureResultVm
+
+@{
+    ViewData["Title"] = "Capture result";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <h1>Capture result</h1>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h4">@Model.EventName</h2>
+
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Participant</dt>
+                    <dd class="col-sm-8">@Model.ParticipantName</dd>
+
+                    <dt class="col-sm-4">Category</dt>
+                    <dd class="col-sm-8">@Model.CategoryName</dd>
+
+                    <dt class="col-sm-4">Entry number</dt>
+                    <dd class="col-sm-8">@Model.EnrolmentId</dd>
+                </dl>
+            </div>
+        </div>
+
+        <form asp-controller="Organiser"
+              asp-action="CaptureResult"
+              asp-route-eventId="@Model.EventId"
+              asp-route-id="@Model.EnrolmentId"
+              method="post">
+
+            <input asp-for="EventId" type="hidden" />
+            <input asp-for="EnrolmentId" type="hidden" />
+
+            <div asp-validation-summary="All"
+                 class="text-danger"
+                 role="alert"></div>
+
+            <div class="mb-3">
+                <label asp-for="FinishTime" class="form-label"></label>
+                <input asp-for="FinishTime"
+                       class="form-control"
+                       placeholder="00:45:30"
+                       maxlength="8"
+                       aria-describedby="finish-time-help" />
+
+                <div id="finish-time-help" class="form-text">
+                    Use HH:mm:ss, for example 00:45:30.
+                    The time must be greater than zero and under 24 hours.
+                </div>
+
+                <span asp-validation-for="FinishTime"
+                      class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="FinishingPosition"
+                       class="form-label"></label>
+                <input asp-for="FinishingPosition"
+                       type="number"
+                       min="1"
+                       step="1"
+                       class="form-control" />
+                <span asp-validation-for="FinishingPosition"
+                      class="text-danger"></span>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    Save result
+                </button>
+
+                <a asp-controller="Organiser"
+                   asp-action="Enrolments"
+                   asp-route-id="@Model.EventId"
+                   class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

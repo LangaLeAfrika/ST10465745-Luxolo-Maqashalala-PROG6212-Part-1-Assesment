@@ -5,6 +5,7 @@ using RaceDay.Contracts;
 using RaceDay.Mvc.Filters;
 using RaceDay.Mvc.Services;
 using RaceDay.Mvc.ViewModels;
+using System.Globalization;
 
 namespace RaceDay.Mvc.Controllers;
 
@@ -797,6 +798,201 @@ public class OrganiserController : Controller
 
             return ApiUnavailable();
         }
+    }
+    // Display the result form for a participant in an owned event.
+    [HttpGet]
+    public async Task<IActionResult> CaptureResult(int eventId, int id)
+    {
+        if (eventId <= 0 || id <= 0)
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            // The API checks ownership before returning this list.
+            using var response = await _api.SendAsync(
+                HttpMethod.Get,
+                $"api/events/{eventId}/enrolments");
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return ApiUnavailable();
+            }
+
+            var enrolments =
+                await _api.ReadAsync<List<EnrolmentDto>>(response);
+
+            if (enrolments is null)
+            {
+                return ApiUnavailable();
+            }
+
+            var entry = enrolments.FirstOrDefault(
+                e => e.EnrolmentId == id && e.EventId == eventId);
+
+            if (entry is null)
+            {
+                return NotFound();
+            }
+
+            return View("CaptureResult", new CaptureResultVm
+            {
+                EventId = entry.EventId,
+                EnrolmentId = entry.EnrolmentId,
+                EventName = entry.EventName,
+                ParticipantName = entry.ParticipantName,
+                CategoryName = entry.CategoryName
+            });
+        }
+        catch (Exception ex) when (
+            ex is HttpRequestException ||
+            ex is TaskCanceledException ||
+            ex is JsonException)
+        {
+            _logger.LogWarning(
+                ex,
+                "Could not load result form for enrolment {EnrolmentId}.",
+                id);
+
+            return ApiUnavailable();
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CaptureResult(
+        int eventId,
+        int id,
+        CaptureResultVm model)
+    {
+        if (eventId <= 0 ||
+            id <= 0 ||
+            eventId != model.EventId ||
+            id != model.EnrolmentId)
+        {
+            return BadRequest();
+        }
+
+        // Reload trusted display data and verify the enrolment belongs
+        // to this organiser's event before processing the form.
+        var page = await CaptureResult(eventId, id);
+
+        if (page is not ViewResult view ||
+            view.Model is not CaptureResultVm trustedModel)
+        {
+            return page;
+        }
+
+        trustedModel.FinishTime = model.FinishTime;
+        trustedModel.FinishingPosition = model.FinishingPosition;
+
+        if (!ModelState.IsValid)
+        {
+            return View("CaptureResult", trustedModel);
+        }
+
+        var request = new CreateResultRequest
+        {
+            FinishTime = TimeSpan.ParseExact(
+                model.FinishTime,
+                @"hh\:mm\:ss",
+                CultureInfo.InvariantCulture),
+            FinishingPosition = model.FinishingPosition!.Value
+        };
+
+        try
+        {
+            using var response = await _api.SendAsync(
+                HttpMethod.Post,
+                $"api/enrolments/{id}/result",
+                request);
+
+            if (response.StatusCode == HttpStatusCode.Created)
+            {
+                TempData["Success"] = "Participant result saved successfully.";
+
+                return RedirectToAction(
+                    nameof(Enrolments),
+                    new { id = eventId });
+            }
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "A result has already been recorded for this entry.");
+            }
+            else if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "The API rejected this result. Results cannot be recorded " +
+                    "for future events. Check the event date, time and position.");
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Saving result for enrolment {EnrolmentId} returned {StatusCode}.",
+                    id,
+                    response.StatusCode);
+
+                ModelState.AddModelError(
+                    "",
+                    "We could not confirm the save. Check the recorded results " +
+                    "before trying again.");
+            }
+        }
+        catch (Exception ex) when (
+            ex is HttpRequestException ||
+            ex is TaskCanceledException)
+        {
+            _logger.LogWarning(
+                ex,
+                "Could not confirm result creation for enrolment {EnrolmentId}.",
+                id);
+
+            ModelState.AddModelError(
+                "",
+                "The connection was interrupted. The result may have been saved. " +
+                "Check the recorded results before trying again.");
+        }
+
+        return View("CaptureResult", trustedModel);
     }
     private IActionResult ApiUnavailable()
     {

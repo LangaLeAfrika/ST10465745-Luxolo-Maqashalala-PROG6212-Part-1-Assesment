@@ -3,7 +3,12 @@
 @{
     ViewData["Title"] = "Event enrolments";
 }
-
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success" role="status">
+        @success
+    </div>
+}
 <h1>Event enrolments</h1>
 
 <div class="card shadow-sm mb-4">
@@ -42,6 +47,7 @@ else
                     <th scope="col">Participant</th>
                     <th scope="col">Category</th>
                     <th scope="col">Date entered</th>
+                    <th scope="col">Result</th>
                 </tr>
             </thead>
 
@@ -54,6 +60,15 @@ else
                         <td>@entry.CategoryName</td>
                         <td class="text-nowrap">
                             @entry.EnrolmentDate.ToString("dd MMM yyyy")
+                        </td>
+                        <td>
+                            <a asp-controller="Organiser"
+                               asp-action="CaptureResult"
+                               asp-route-eventId="@Model.Event.EventId"
+                               asp-route-id="@entry.EnrolmentId"
+                               class="btn btn-outline-primary btn-sm">
+                                Capture result
+                            </a>
                         </td>
                     </tr>
                 }
