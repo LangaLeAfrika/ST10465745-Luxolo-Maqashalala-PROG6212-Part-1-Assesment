@@ -329,6 +329,61 @@ public class ParticipantController : Controller
             return ApiUnavailable();
         }
     }
+    [HttpGet]
+    public async Task<IActionResult> MyResults()
+    {
+        try
+        {
+            using var response = await _api.SendAsync(
+                HttpMethod.Get,
+                "api/results/me");
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Loading participant results returned {StatusCode}.",
+                    response.StatusCode);
+
+                return ApiUnavailable();
+            }
+
+            var results =
+                await _api.ReadAsync<List<ResultDto>>(response);
+
+            if (results is null)
+            {
+                return ApiUnavailable();
+            }
+
+            return View(results
+                .OrderBy(r => r.EventName)
+                .ThenBy(r => r.CategoryName)
+                .ToList());
+        }
+        catch (Exception ex) when (
+            ex is HttpRequestException ||
+            ex is TaskCanceledException ||
+            ex is JsonException)
+        {
+            _logger.LogWarning(
+                ex,
+                "Could not load participant results.");
+
+            return ApiUnavailable();
+        }
+    }
     private IActionResult ApiUnavailable()
     {
         Response.StatusCode = StatusCodes.Status503ServiceUnavailable;

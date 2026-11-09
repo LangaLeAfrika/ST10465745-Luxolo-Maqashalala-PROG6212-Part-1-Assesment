@@ -1,0 +1,86 @@
+﻿@model List<RaceDay.Contracts.ResultDto>
+
+@{
+    ViewData["Title"] = "My results";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1>My results</h1>
+        <p class="text-muted mb-0">
+            Your finish times and positions recorded by event organisers.
+        </p>
+    </div>
+
+    <a asp-controller="Participant"
+       asp-action="MyEvents"
+       class="btn btn-outline-primary">
+        My events
+    </a>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-info">
+        No results have been recorded for you yet.
+        Your results will appear here after the organiser captures them.
+    </div>
+}
+else
+{
+    <p>
+        <strong>Recorded results:</strong> @Model.Count
+    </p>
+
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0">
+                <caption class="px-3">
+                    Finish times are shown as hours:minutes:seconds.
+                </caption>
+
+                <thead>
+                    <tr>
+                        <th scope="col">Event</th>
+                        <th scope="col">Category</th>
+                        <th scope="col">Finish time</th>
+                        <th scope="col">Position</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var result in Model)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@result.EventName</td>
+                            <td>@result.CategoryName</td>
+                            <td class="text-nowrap">
+                                @(result.FinishTime.HasValue
+                                    ? result.FinishTime.Value.ToString(@"hh\:mm\:ss")
+                                    : "Not recorded")
+                            </td>
+                            <td>
+                                @if (result.FinishingPosition.HasValue)
+                                {
+                                    <span class="badge bg-primary">
+                                        @result.FinishingPosition.Value
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Not recorded</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<a asp-controller="Participant"
+   asp-action="Index"
+   class="btn btn-outline-secondary mt-4">
+    Browse events
+</a>
