@@ -210,7 +210,7 @@ public class ParticipantController : Controller
             if (response.StatusCode == HttpStatusCode.Created)
             {
                 TempData["Success"] = "You have successfully entered the event.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(MyEvents));
             }
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
@@ -275,7 +275,60 @@ public class ParticipantController : Controller
         // Reload display data while retaining submitted values and errors.
         return await Enter(id);
     }
+    [HttpGet]
+    public async Task<IActionResult> MyEvents()
+    {
+        try
+        {
+            using var response = await _api.SendAsync(
+                HttpMethod.Get,
+                "api/enrolments/me");
 
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return View("~/Views/Shared/AccessDenied.cshtml");
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Loading participant enrolments returned {StatusCode}.",
+                    response.StatusCode);
+
+                return ApiUnavailable();
+            }
+
+            var enrolments =
+                await _api.ReadAsync<List<EnrolmentDto>>(response);
+
+            if (enrolments is null)
+            {
+                return ApiUnavailable();
+            }
+
+            return View(enrolments
+                .OrderByDescending(e => e.EnrolmentDate)
+                .ToList());
+        }
+        catch (Exception ex) when (
+            ex is HttpRequestException ||
+            ex is TaskCanceledException ||
+            ex is JsonException)
+        {
+            _logger.LogWarning(
+                ex,
+                "Could not load participant enrolments.");
+
+            return ApiUnavailable();
+        }
+    }
     private IActionResult ApiUnavailable()
     {
         Response.StatusCode = StatusCodes.Status503ServiceUnavailable;

@@ -1,0 +1,74 @@
+﻿@model List<RaceDay.Contracts.EnrolmentDto>
+
+@{
+    ViewData["Title"] = "My events";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1>My events</h1>
+        <p class="text-muted mb-0">
+            View the events you have entered and your selected categories.
+        </p>
+    </div>
+
+    <a asp-controller="Participant"
+       asp-action="Index"
+       class="btn btn-primary">
+        Browse events
+    </a>
+</div>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success" role="status">
+        @success
+    </div>
+}
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-info">
+        You have not entered any events yet.
+        Browse the available events to find your next race.
+    </div>
+}
+else
+{
+    <p>
+        <strong>Total entries:</strong> @Model.Count
+    </p>
+
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0">
+                <caption class="px-3">
+                    Your entries, with the most recently submitted first.
+                </caption>
+
+                <thead>
+                    <tr>
+                        <th scope="col">Entry number</th>
+                        <th scope="col">Event</th>
+                        <th scope="col">Category</th>
+                        <th scope="col">Date entered</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var entry in Model)
+                    {
+                        <tr>
+                            <td>@entry.EnrolmentId</td>
+                            <td class="fw-semibold">@entry.EventName</td>
+                            <td>@entry.CategoryName</td>
+                            <td class="text-nowrap">
+                                @entry.EnrolmentDate.ToString("dd MMM yyyy")
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
