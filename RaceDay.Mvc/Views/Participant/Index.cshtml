@@ -1,16 +1,106 @@
-﻿@using Microsoft.AspNetCore.Http
+﻿@model RaceDay.Mvc.ViewModels.ParticipantEventsVm
 
 @{
-    ViewData["Title"] = "Participant dashboard";
+    ViewData["Title"] = "Browse events";
 }
 
-<h1>Participant dashboard</h1>
-
-<p class="lead">
-    Welcome, @Context.Session.GetString("DisplayName").
+<h1>Browse events</h1>
+<p class="text-muted">
+    Find your next running, walking or cycling event.
+    Events happening today are also included.
 </p>
 
-<p>
-    Your participant workspace will bring together upcoming events,
-    your entries and your race results.
-</p>
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success" role="status">
+        @success
+    </div>
+}
+
+<form asp-controller="Participant"
+      asp-action="Index"
+      method="get"
+      class="card card-body mb-4">
+
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label asp-for="Search" class="form-label">
+                Event name
+            </label>
+            <input asp-for="Search" class="form-control" />
+        </div>
+
+        <div class="col-md-3">
+            <label asp-for="EventType" class="form-label">
+                Event type
+            </label>
+            <select asp-for="EventType" class="form-select">
+                <option value="">All types</option>
+                <option value="Running">Running</option>
+                <option value="Walking">Walking</option>
+                <option value="Cycling">Cycling</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label asp-for="Location" class="form-label"></label>
+            <input asp-for="Location" class="form-control" />
+        </div>
+
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">
+                Search
+            </button>
+        </div>
+    </div>
+
+    <div class="mt-2">
+        <a asp-controller="Participant" asp-action="Index">
+            Clear filters
+        </a>
+    </div>
+</form>
+
+@if (Model.Events.Count == 0)
+{
+    <div class="alert alert-info">
+        No upcoming events match your search.
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var raceEvent in Model.Events)
+        {
+            <div class="col-md-6 col-xl-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <h2 class="h5">@raceEvent.EventName</h2>
+
+                        <p class="text-muted">
+                            @raceEvent.EventDate.ToString("dd MMM yyyy")
+                        </p>
+
+                        <p>@raceEvent.Location</p>
+
+                        <p>
+                            <span class="badge bg-primary">
+                                @raceEvent.EventType
+                            </span>
+                            <span class="ms-2">
+                                @raceEvent.Distance.ToString("0.##") km
+                            </span>
+                        </p>
+
+                        <a asp-controller="Participant"
+                           asp-action="Enter"
+                           asp-route-id="@raceEvent.EventId"
+                           class="btn btn-outline-primary mt-auto">
+                            View details and enter
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

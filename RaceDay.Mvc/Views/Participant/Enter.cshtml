@@ -1,0 +1,137 @@
+﻿@model RaceDay.Mvc.ViewModels.EnterEventVm
+
+@{
+    ViewData["Title"] = "Enter event";
+}
+
+<h1>@Model.Event.EventName</h1>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h4">Event details</h2>
+
+                <dl class="row">
+                    <dt class="col-sm-4">Date</dt>
+                    <dd class="col-sm-8">
+                        @Model.Event.EventDate.ToString("dd MMM yyyy")
+                    </dd>
+
+                    <dt class="col-sm-4">Location</dt>
+                    <dd class="col-sm-8">@Model.Event.Location</dd>
+
+                    <dt class="col-sm-4">Type</dt>
+                    <dd class="col-sm-8">@Model.Event.EventType</dd>
+
+                    <dt class="col-sm-4">Distance</dt>
+                    <dd class="col-sm-8">
+                        @Model.Event.Distance.ToString("0.##") km
+                    </dd>
+                </dl>
+
+                @if (!string.IsNullOrWhiteSpace(Model.Event.Description))
+                {
+                    <p class="mb-0">@Model.Event.Description</p>
+                }
+            </div>
+        </div>
+
+        @if (Model.Categories.Count > 0)
+        {
+            <h2 class="h4 mt-4">Categories</h2>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">Category</th>
+                            <th scope="col">Minimum age</th>
+                            <th scope="col">Maximum age</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var category in Model.Categories)
+                        {
+                            <tr>
+                                <td>@category.CategoryName</td>
+                                <td>
+                                    @(category.MinimumAge?.ToString() ?? "No minimum")
+                                </td>
+                                <td>
+                                    @(category.MaximumAge?.ToString() ?? "No maximum")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h4">Enter this event</h2>
+
+                <div asp-validation-summary="All"
+                     class="text-danger"
+                     role="alert"></div>
+
+                @if (Model.Categories.Count == 0)
+                {
+                    <div class="alert alert-info mb-0">
+                        The organiser has not added any categories yet.
+                        Please check again later.
+                    </div>
+                }
+                else
+                {
+                    <form asp-controller="Participant"
+                          asp-action="Enter"
+                          asp-route-id="@Model.Event.EventId"
+                          method="post">
+
+                        <div class="mb-3">
+                            <label asp-for="CategoryId"
+                                   class="form-label"></label>
+
+                            <select asp-for="CategoryId"
+                                    class="form-select">
+                                <option value="">Select a category</option>
+
+                                @foreach (var category in Model.Categories)
+                                {
+                                    <option value="@category.CategoryId">
+                                        @category.CategoryName
+                                    </option>
+                                }
+                            </select>
+
+                            <span asp-validation-for="CategoryId"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <p class="text-muted small">
+                            Check the category's age limits before entering.
+                        </p>
+
+                        <button type="submit" class="btn btn-primary">
+                            Confirm entry
+                        </button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<a asp-controller="Participant"
+   asp-action="Index"
+   class="btn btn-outline-secondary mt-4">
+    Back to events
+</a>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
