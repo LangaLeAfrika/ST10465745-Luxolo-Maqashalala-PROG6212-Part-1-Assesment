@@ -3,7 +3,7 @@
 **Student:** Luxolo Maqashalala  
 **Student Number:** ST10465745  
 **Module:** PROG6212  
-**Assessment:** Portfolio of Evidence — Parts 1 and 2
+**Assessment:** Portfolio of Evidence — Parts 1, 2 and Part 3 in progress
 
 ## Project Overview
 
@@ -16,6 +16,53 @@ session-based access control and automated tests.
 
 The API supports Organisers and Participants. Swagger UI provides an
 interface for exploring and testing the endpoints during development.
+
+## Part 3 MVC application
+
+`RaceDay.Mvc` provides registration/login, role-aware navigation, organiser event
+and category management, enrolment lists, result capture/editing, participant
+browsing/filtering/entry, My Events, My Results and profile editing.
+MVC calls the API; only the API accesses SQL Server. The MVC server preserves
+an API session cookie separately for each browser session. Status badges show
+Confirmed because entries are accepted immediately. Withdrawal currently exists
+in the API only and removes the enrolment; there is no pending approval workflow.
+
+### Run locally on Windows
+
+1. Open **RaceDay.sln at the repository root**. This conventional solution works
+   with the .NET 8 CLI and includes all four projects. The older nested
+   `RaceDay/RaceDay.slnx` remains available for newer Visual Studio versions.
+2. Restore and build: `dotnet restore RaceDay.sln`, then
+   `dotnet build RaceDay.sln --configuration Release`.
+3. Configure the API's `DefaultConnection` as described below. Apply all migrations
+   using Package Manager Console:
+   `Update-Database -Project RaceDay -StartupProject RaceDay -Context RaceDayDbContext`.
+4. Trust your local development certificate with `dotnet dev-certs https --trust`.
+5. Configure both **RaceDay** and **RaceDay.Mvc** as startup projects in Visual Studio,
+   with the **https** launch profile. Alternatively run these in separate terminals:
+
+```powershell
+dotnet run --project RaceDay/RaceDay.csproj --launch-profile https
+dotnet run --project RaceDay.Mvc/RaceDay.Mvc.csproj --launch-profile https
+```
+
+Open MVC at `https://localhost:7266` and Swagger at
+`https://localhost:7259/swagger/index.html`. MVC's `ApiSettings:BaseUrl` must match
+the API address. Log into MVC and Swagger separately; their sessions are separate.
+Use demo accounts for testing. Event dates use South African time; form parsing
+uses English with a dot decimal separator (for example `10.5`).
+
+### Still required before final submission
+
+- Azure event-banner and profile-photo uploads through MVC → API → Azure,
+  persisted image references, validation and image display.
+- Docker image and verified container-to-API login/data flow.
+- Local SQL migration checks and browser checks at desktop and mobile sizes.
+- Fresh GitHub Actions evidence after pushing, 20+ meaningful Part 3 commits,
+  final screenshots and the Part 3 demonstration video.
+
+These items are not claimed as implemented by the MVC/CI patch. See
+[Part 3 patch verification](docs/Part3_Mvc_CI_Verification.md).
 
 ## Implementation Notes
 
@@ -50,6 +97,8 @@ in the API Routes section and Swagger.
 |---|---|
 | `RaceDay/` | API, controllers, models, database context and migrations |
 | `RaceDay.Contracts/` | Request and response DTOs |
+| `RaceDay.Mvc/` | MVC website, API client, forms and role-protected pages |
+| `RaceDay.sln` | Root solution for the .NET 8 CLI and CI |
 | `RaceDay.Api.Tests/` | Automated tests and test application factory |
 | `docs/` | Part 1 design documents and database script |
 | `docs/images/` | Screenshots demonstrating testing and automation |
@@ -240,9 +289,9 @@ store a date of birth.
 
 ## Automated Testing
 
-The recorded local test run completed with:
+The MVC/CI patch was checked on Linux with .NET SDK 8.0.427:
 
-**41 passed — 0 failed — 0 skipped.**
+**55 passed — 0 failed — 0 skipped.**
 
 | Test class | Cases | Coverage |
 |---|---:|---|
@@ -250,7 +299,8 @@ The recorded local test run completed with:
 | `EventAndEnrolmentTests` | 9 | Event ownership, enrolment rules and privacy |
 | `EventValidationTests` | 6 | Decimal validation under different cultures |
 | `CategoryAndResultTests` | 17 | Category restrictions, result validation and access |
-| **Total** | **41** | |
+| `MvcSmokeTests` | 14 | Razor rendering, session forwarding/isolation, role restrictions, expiry and antiforgery |
+| **Total** | **55** | |
 
 ### Run in Visual Studio
 
@@ -266,10 +316,15 @@ The tests use a test application host and an isolated EF Core InMemory
 database. They do not require the application's LocalDB database.
 
 The InMemory provider does not reproduce all SQL Server behaviours.
-These tests verify API behaviour; they do not replace SQL Server
+The MVC tests run the actual MVC host with a deterministic fake API handler;
+they are not live SQL/API end-to-end tests.
+These tests verify application behaviour; they do not replace SQL Server
 integration testing of relational constraints and migrations.
 
-### Test Evidence
+### Previous Part 2 Test Evidence
+
+The image below records the original 41-test suite. Capture new Part 3 evidence
+after applying the patch and running all 55 cases.
 
 ![Visual Studio showing all 41 tests passing](docs/images/tests-passed.png)
 
@@ -280,8 +335,8 @@ The GitHub Actions workflow is intended to:
 1. Check out the repository.
 2. Install the .NET 8 SDK.
 3. Restore dependencies.
-4. Build the test project and its referenced projects.
-5. Run the automated test suite.
+4. Build the entire root `RaceDay.sln`, including MVC.
+5. Run API tests and MVC smoke tests in the existing test project.
 6. Upload a test-results artifact.
 
 The workflow is configured for pushes, pull requests and manual runs.

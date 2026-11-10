@@ -6,7 +6,7 @@
     var role = Context.Session.GetString("Role");
 }
 
-<ul class="navbar-nav align-items-sm-center">
+<ul class="navbar-nav align-items-xl-center gap-xl-1">
     @if (userId.HasValue)
     {
         <li class="nav-item">
@@ -54,15 +54,9 @@
             </li>
         }
 
-        {
-            <li class="nav-item">
-                <a class="nav-link text-dark"
-                   asp-controller="Participant"
-                   asp-action="Index">
-                    Participant dashboard
-                </a>
-            </li>
-        }
+        <li class="nav-item user-summary">
+            <span class="nav-link">@displayName <span class="badge bg-secondary">@role</span></span>
+        </li>
 
         <li class="nav-item">
             <form asp-controller="Auth"

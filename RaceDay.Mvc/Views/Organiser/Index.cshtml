@@ -35,33 +35,18 @@
 </div>
 
 <div class="row g-3 mb-4">
-    <div class="col-md-4">
-        <div class="card h-100 shadow-sm">
-            <div class="card-body">
-                <h2 class="h6 text-muted">Total events</h2>
-                <p class="display-6 mb-0">@Model.TotalEvents</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card h-100 shadow-sm">
-            <div class="card-body">
-                <h2 class="h6 text-muted">Upcoming events</h2>
-                <p class="display-6 mb-0">@Model.UpcomingEvents</p>
-                <small class="text-muted">Includes today's events</small>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <h2 class="h6 text-muted">Total enrolments</h2>
-                        <p class="display-6 mb-0">@Model.TotalEnrolments</p>
-                        <small class="text-muted">Across your events</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="col-md-4"><div class="card h-100 shadow-sm"><div class="card-body">
+        <h2 class="h6 text-muted">Total events</h2><p class="display-6 mb-0">@Model.TotalEvents</p>
+        <small class="text-muted">Events you manage</small>
+    </div></div></div>
+    <div class="col-md-4"><div class="card h-100 shadow-sm"><div class="card-body">
+        <h2 class="h6 text-muted">Upcoming events</h2><p class="display-6 mb-0">@Model.UpcomingEvents</p>
+        <small class="text-muted">Includes today's events</small>
+    </div></div></div>
+    <div class="col-md-4"><div class="card h-100 shadow-sm"><div class="card-body">
+        <h2 class="h6 text-muted">Total enrolments</h2><p class="display-6 mb-0">@Model.TotalEnrolments</p>
+        <small class="text-muted">Across your events</small>
+    </div></div></div>
 </div>
 
 <h2 class="h4 mb-3">My events</h2>
@@ -90,8 +75,8 @@ else
                         <th scope="col">Type</th>
                         <th scope="col">Distance</th>
                         <th scope="col">Schedule</th>
-                        <th scope="col">Actions</th>
                         <th scope="col">Enrolments</th>
+                        <th scope="col">Actions</th>
                     </tr>
                 </thead>
 

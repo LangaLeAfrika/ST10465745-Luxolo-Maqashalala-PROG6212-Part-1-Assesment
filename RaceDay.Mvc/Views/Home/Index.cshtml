@@ -1,50 +1,32 @@
 ﻿@using Microsoft.AspNetCore.Http
-
 @{
     ViewData["Title"] = "Home";
-
-    var userId = Context.Session.GetInt32("UserId");
-    var displayName = Context.Session.GetString("DisplayName");
     var role = Context.Session.GetString("Role");
+    var signedIn = Context.Session.GetInt32("UserId").HasValue;
 }
-
-<div class="text-center py-5">
-    <h1 class="display-4">RaceDay</h1>
-    <p class="lead">Run. Walk. Cycle. Be part of the event.</p>
-
-    @if (userId.HasValue)
-    {
-        <div class="card mx-auto mt-4" style="max-width: 480px;">
-            <div class="card-body">
-                <h2 class="h4">Welcome, @displayName</h2>
-                <p>
-                    Signed in as
-                    <span class="badge bg-primary">@role</span>
-                </p>
-
-                <form asp-controller="Auth"
-                      asp-action="Logout"
-                      method="post">
-                    <button type="submit"
-                            class="btn btn-outline-danger">
-                        Log out
-                    </button>
-                </form>
-            </div>
-        </div>
-    }
-    else
-    {
-        <a asp-controller="Auth"
-           asp-action="Register"
-           class="btn btn-primary me-2">
-            Create account
-        </a>
-
-        <a asp-controller="Auth"
-           asp-action="Login"
-           class="btn btn-outline-primary">
-            Log in
-        </a>
-    }
+<section class="race-hero mb-4">
+    <p class="eyebrow">South African community events</p>
+    <h1 class="display-4">Your next starting line.</h1>
+    <p class="lead">Run, walk or cycle. Find your event, enter your category and follow your results.</p>
+    <div class="d-flex flex-wrap gap-2 mt-4">
+        @if (signedIn && role == "Organiser")
+        {
+            <a class="btn btn-light" asp-controller="Organiser" asp-action="Index">Open organiser dashboard</a>
+        }
+        else if (signedIn && role == "Participant")
+        {
+            <a class="btn btn-light" asp-controller="Participant" asp-action="Index">Browse events</a>
+            <a class="btn btn-outline-light" asp-controller="Participant" asp-action="MyEvents">My entries</a>
+        }
+        else
+        {
+            <a class="btn btn-light" asp-controller="Auth" asp-action="Register">Create an account</a>
+            <a class="btn btn-outline-light" asp-controller="Auth" asp-action="Login">Log in</a>
+        }
+    </div>
+</section>
+<div class="row g-3">
+    <div class="col-md-4"><section class="card h-100"><div class="card-body"><h2 class="h4">Find your event</h2><p>Explore running, walking and cycling events by name, type and location.</p></div></section></div>
+    <div class="col-md-4"><section class="card h-100"><div class="card-body"><h2 class="h4">Make your entry</h2><p>Choose a category and keep your entries together in My Events.</p></div></section></div>
+    <div class="col-md-4"><section class="card h-100"><div class="card-body"><h2 class="h4">See your results</h2><p>View finish times and positions once your organiser records them.</p></div></section></div>
 </div>

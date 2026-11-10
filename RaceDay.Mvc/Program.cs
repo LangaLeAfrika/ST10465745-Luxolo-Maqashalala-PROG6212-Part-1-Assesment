@@ -51,14 +51,20 @@ builder.Services.AddScoped<RaceDayApiClient>();
 
 var app = builder.Build();
 
+app.UseExceptionHandler("/Home/Error");
+
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+app.UseRequestLocalization(new RequestLocalizationOptions()
+    .SetDefaultCulture("en-GB")
+    .AddSupportedCultures("en-GB")
+    .AddSupportedUICultures("en-GB"));
 
 app.UseRouting();
 app.UseSession();

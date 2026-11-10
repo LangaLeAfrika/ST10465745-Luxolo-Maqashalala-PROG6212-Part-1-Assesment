@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using RaceDay.Contracts;
 using RaceDay.Mvc.Services;
@@ -69,7 +70,7 @@ public class AuthController : Controller
             ModelState.AddModelError(string.Empty, message);
         }
         catch (Exception ex) when (
-            ex is HttpRequestException or TaskCanceledException)
+            ex is HttpRequestException or TaskCanceledException or JsonException)
         {
             _logger.LogWarning(ex, "Registration API request failed.");
 
@@ -85,7 +86,9 @@ public class AuthController : Controller
     public IActionResult Login()
     {
         if (HttpContext.Session.GetInt32("UserId").HasValue)
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index",
+                HttpContext.Session.GetString("Role") == "Organiser"
+                    ? "Organiser" : "Participant");
 
         return View(new LoginVm());
     }
@@ -94,7 +97,9 @@ public class AuthController : Controller
     public async Task<IActionResult> Login(LoginVm model)
     {
         if (HttpContext.Session.GetInt32("UserId").HasValue)
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index",
+                HttpContext.Session.GetString("Role") == "Organiser"
+                    ? "Organiser" : "Participant");
 
         if (!ModelState.IsValid)
             return View(model);
@@ -152,10 +157,12 @@ public class AuthController : Controller
                 "DisplayName",
                 user.FirstName ?? user.Email ?? "RaceDay user");
 
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index",
+                HttpContext.Session.GetString("Role") == "Organiser"
+                    ? "Organiser" : "Participant");
         }
         catch (Exception ex) when (
-            ex is HttpRequestException or TaskCanceledException)
+            ex is HttpRequestException or TaskCanceledException or JsonException)
         {
             HttpContext.Session.Clear();
             _logger.LogWarning(ex, "Login API request failed.");
@@ -185,7 +192,7 @@ public class AuthController : Controller
             }
         }
         catch (Exception ex) when (
-            ex is HttpRequestException or TaskCanceledException)
+            ex is HttpRequestException or TaskCanceledException or JsonException)
         {
             _logger.LogWarning(ex, "Logout API request failed.");
         }

@@ -149,6 +149,8 @@ public class CategoryAndResultTests : IDisposable
         Assert.Equal(created.ResultId, myResult.ResultId);
         Assert.Equal(TimeSpan.FromMinutes(47), myResult.FinishTime);
         Assert.Equal(2, myResult.FinishingPosition);
+        Assert.NotEqual(default, created.EventDate);
+        Assert.Equal(created.EventDate, myResult.EventDate);
 
         // Another participant must not receive this person's result.
         await RegisterAndLogin(_otherUser, 2);

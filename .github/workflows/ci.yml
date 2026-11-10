@@ -24,11 +24,11 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore RaceDay.Api.Tests/RaceDay.Api.Tests.csproj
+        run: dotnet restore RaceDay.sln
 
       - name: Build
         run: >
-          dotnet build RaceDay.Api.Tests/RaceDay.Api.Tests.csproj
+          dotnet build RaceDay.sln
           --configuration Release
           --no-restore
 
@@ -43,7 +43,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: raceday-test-results
           path: TestResults/**/*.trx
