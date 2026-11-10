@@ -46,6 +46,7 @@ else
                     <th scope="col">Entry number</th>
                     <th scope="col">Participant</th>
                     <th scope="col">Category</th>
+                    <th scope="col">Status</th>
                     <th scope="col">Date entered</th>
                     <th scope="col">Result</th>
                 </tr>
@@ -58,6 +59,7 @@ else
                         <td>@entry.EnrolmentId</td>
                         <td class="fw-semibold">@entry.ParticipantName</td>
                         <td>@entry.CategoryName</td>
+                        <td><partial name="_EnrolmentStatus" model="entry.Status" /></td>
                         <td class="text-nowrap">
                             @entry.EnrolmentDate.ToString("dd MMM yyyy")
                         </td>

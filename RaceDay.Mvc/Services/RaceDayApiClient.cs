@@ -1,4 +1,4 @@
-﻿using System.Net.Http.Json;
+using System.Net.Http.Json;
 
 namespace RaceDay.Mvc.Services;
 
@@ -53,7 +53,7 @@ public class RaceDayApiClient
 
         if (body is not null)
         {
-            request.Content = JsonContent.Create(body);
+            request.Content = body as HttpContent ?? JsonContent.Create(body);
         }
 
         var response = await client.SendAsync(

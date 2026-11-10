@@ -1,0 +1,8 @@
+@model string
+
+@{
+    var badgeClass = Model == "Confirmed" ? "bg-success" : "bg-secondary";
+    var label = string.IsNullOrWhiteSpace(Model) ? "Unknown" : Model;
+}
+
+<span class="badge @badgeClass">@label</span>

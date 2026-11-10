@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace RaceDay.Models;
@@ -8,6 +8,8 @@ public class Event
     public int EventId { get; set; }
 
     public string EventName { get; set; } = string.Empty;
+
+    public string? BannerImagePath { get; set; }
 
     public string? Description { get; set; }
 

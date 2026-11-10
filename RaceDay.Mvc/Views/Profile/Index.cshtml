@@ -1,4 +1,4 @@
-﻿@model RaceDay.Mvc.ViewModels.ProfileVm
+@model RaceDay.Mvc.ViewModels.ProfileVm
 
 @{
     ViewData["Title"] = "My profile";
@@ -7,6 +7,8 @@
 <div class="row justify-content-center">
     <div class="col-lg-7">
         <h1>My profile</h1>
+        <img src="@Url.Action("Photo", "Images")" alt="Your profile photo" class="rounded mb-3" style="width:160px;height:160px;object-fit:cover" />
+        <p><a asp-controller="Images" asp-action="PhotoUpload" class="btn btn-outline-primary">Change profile photo</a></p>
         <p class="text-muted">
             Keep your name and contact email up to date.
         </p>

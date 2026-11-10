@@ -1,4 +1,4 @@
-﻿@model RaceDay.Mvc.ViewModels.EventFormVm
+@model RaceDay.Mvc.ViewModels.EventFormVm
 
 @{
     ViewData["Title"] = "Edit event";
@@ -7,6 +7,7 @@
 <div class="row justify-content-center">
     <div class="col-lg-8">
         <h1>Edit event</h1>
+        <p><a asp-controller="Images" asp-action="BannerUpload" asp-route-id="@Model.EventId" class="btn btn-outline-primary">Change event banner</a></p>
         <p class="text-muted">
             Update your event details below.
         </p>

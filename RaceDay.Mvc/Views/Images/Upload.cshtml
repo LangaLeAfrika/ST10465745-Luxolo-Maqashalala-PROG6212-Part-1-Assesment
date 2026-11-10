@@ -1,0 +1,18 @@
+@model RaceDay.Mvc.ViewModels.ImageUploadVm
+@{ ViewData["Title"] = Model.Title; }
+<div class="row justify-content-center"><div class="col-lg-7">
+    <h1>@Model.Title</h1>
+    @if (TempData["Success"] is string success)
+    { <div class="alert alert-success" role="status">@success</div> }
+    <img src="@(Model.EventId.HasValue ? Url.Action("Banner", "Images", new { id = Model.EventId }) : Url.Action("Photo", "Images"))"
+         class="img-fluid rounded mb-3" style="max-height:260px" alt="Current @Model.Title.ToLowerInvariant()" />
+    <form asp-controller="Images" asp-action="@(Model.EventId.HasValue ? "BannerUpload" : "PhotoUpload")"
+          asp-route-id="@Model.EventId" method="post" enctype="multipart/form-data" class="card card-body">
+        <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+        <label asp-for="File" class="form-label">Choose an image</label>
+        <input asp-for="File" type="file" accept="image/png,image/jpeg" class="form-control" required aria-describedby="image-help" />
+        <p id="image-help" class="form-text">PNG or JPEG, up to 5 MB. Uploading replaces your current image.</p>
+        <button class="btn btn-primary" type="submit">Save image</button>
+    </form>
+    <a class="btn btn-link mt-3" asp-controller="@(Model.EventId.HasValue ? "Organiser" : "Profile")" asp-action="Index">Back</a>
+</div></div>

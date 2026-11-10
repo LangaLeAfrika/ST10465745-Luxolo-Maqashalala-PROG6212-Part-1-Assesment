@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using RaceDay.Models;
 
 namespace RaceDay.Data;
@@ -21,6 +21,9 @@ public class RaceDayDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Event>().Property(e => e.BannerImagePath).HasMaxLength(500);
+        modelBuilder.Entity<AppUser>().Property(u => u.ProfileImagePath).HasMaxLength(500);
 
         // 1. ROLE
         modelBuilder.Entity<Role>(entity =>

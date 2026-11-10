@@ -54,14 +54,14 @@ uses English with a dot decimal separator (for example `10.5`).
 
 ### Still required before final submission
 
-- Azure event-banner and profile-photo uploads through MVC → API → Azure,
-  persisted image references, validation and image display.
+- Verify Azure uploads against your real storage account using [the Azure checklist](docs/Azure_Image_Setup.md).
+  Upload routes, MVC forms, private image delivery and the database migration are implemented.
 - Docker image and verified container-to-API login/data flow.
 - Local SQL migration checks and browser checks at desktop and mobile sizes.
 - Fresh GitHub Actions evidence after pushing, 20+ meaningful Part 3 commits,
   final screenshots and the Part 3 demonstration video.
 
-These items are not claimed as implemented by the MVC/CI patch. See
+Docker and real-cloud/browser verification remain outstanding. See
 [Part 3 patch verification](docs/Part3_Mvc_CI_Verification.md).
 
 ## Implementation Notes
@@ -289,9 +289,9 @@ store a date of birth.
 
 ## Automated Testing
 
-The MVC/CI patch was checked on Linux with .NET SDK 8.0.427:
+The MVC/Azure code was checked on Linux with .NET SDK 8.0.427 (Azure storage is replaced with an in-memory fake in automated tests):
 
-**55 passed — 0 failed — 0 skipped.**
+**67 passed — 0 failed — 0 skipped.**
 
 | Test class | Cases | Coverage |
 |---|---:|---|
@@ -299,8 +299,9 @@ The MVC/CI patch was checked on Linux with .NET SDK 8.0.427:
 | `EventAndEnrolmentTests` | 9 | Event ownership, enrolment rules and privacy |
 | `EventValidationTests` | 6 | Decimal validation under different cultures |
 | `CategoryAndResultTests` | 17 | Category restrictions, result validation and access |
-| `MvcSmokeTests` | 14 | Razor rendering, session forwarding/isolation, role restrictions, expiry and antiforgery |
-| **Total** | **55** | |
+| `MvcSmokeTests` | 18 | Razor rendering, session forwarding/isolation, role restrictions, expiry and antiforgery |
+| `ImageUploadTests` | 8 | Upload/download, replacement, privacy, ownership, invalid/oversized files and storage failure |
+| **Total** | **67** | |
 
 ### Run in Visual Studio
 
@@ -324,7 +325,7 @@ integration testing of relational constraints and migrations.
 ### Previous Part 2 Test Evidence
 
 The image below records the original 41-test suite. Capture new Part 3 evidence
-after applying the patch and running all 55 cases.
+after applying the patch and running all 67 cases.
 
 ![Visual Studio showing all 41 tests passing](docs/images/tests-passed.png)
 

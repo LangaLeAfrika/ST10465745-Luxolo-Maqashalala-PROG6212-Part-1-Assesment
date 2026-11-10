@@ -32,6 +32,8 @@ public class MvcSmokeTests
     [InlineData("/Organiser")]
     [InlineData("/Participant/MyEvents")]
     [InlineData("/Profile")]
+    [InlineData("/Images/PhotoUpload")]
+    [InlineData("/Images/BannerUpload/1")]
     public async Task ProtectedPages_RedirectAnonymousUsers(string path)
     {
         using var app = new MvcFactory();
@@ -56,6 +58,7 @@ public class MvcSmokeTests
     [InlineData("/Participant/MyEvents", "Confirmed")]
     [InlineData("/Participant/MyResults", "00:45:30")]
     [InlineData("/Profile", "Runner")]
+    [InlineData("/Images/PhotoUpload", "multipart/form-data")]
     public async Task ParticipantPages_RenderWithForwardedApiSession(string path, string expected)
     {
         using var app = new MvcFactory();
@@ -64,6 +67,18 @@ public class MvcSmokeTests
         var response = await client.GetAsync(path);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains(expected, await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task PhotoUpload_RejectsMissingAntiforgeryToken()
+    {
+        using var app = new MvcFactory();
+        using var client = app.Client();
+        await Login(client);
+        using var form = new MultipartFormDataContent();
+        form.Add(new ByteArrayContent(new byte[] { 1, 2 }), "File", "photo.png");
+        Assert.Equal(HttpStatusCode.BadRequest,
+            (await client.PostAsync("/Images/PhotoUpload", form)).StatusCode);
     }
 
     [Fact]
