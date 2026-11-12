@@ -48,3 +48,44 @@ jobs:
           name: raceday-test-results
           path: TestResults/**/*.trx
           if-no-files-found: warn
+
+  docker-smoke:
+    name: Build MVC container and check home page
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Build MVC image
+        run: docker build -f RaceDay.Mvc/Dockerfile -t raceday-mvc:ci .
+
+      - name: Start MVC container
+        run: >
+          docker run -d --name raceday-mvc-ci
+          -p 127.0.0.1:8080:8080
+          -e ASPNETCORE_ENVIRONMENT=Development
+          -e LocalDockerDemo__AllowHttp=true
+          -e ApiSettings__BaseUrl=http://host.docker.internal:5000/
+          raceday-mvc:ci
+
+      - name: Check container home page
+        shell: bash
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://localhost:8080/ -o /tmp/raceday-home.html; then
+              grep -q 'main-navigation' /tmp/raceday-home.html
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+
+      - name: Show container logs
+        if: always()
+        run: docker logs raceday-mvc-ci || true
+
+      - name: Remove CI container
+        if: always()
+        run: docker rm -f raceday-mvc-ci || true

@@ -3,6 +3,13 @@ using RaceDay.Mvc.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Explicit opt-in for the local Docker Desktop demo; never allowed in production.
+var localDockerHttp = builder.Configuration.GetValue<bool>("LocalDockerDemo:AllowHttp");
+if (localDockerHttp && !builder.Environment.IsDevelopment())
+{
+    throw new InvalidOperationException("LocalDockerDemo:AllowHttp requires Development.");
+}
+
 builder.Services.AddControllersWithViews(options =>
 {
     // Protect form submissions against cross-site request forgery.
@@ -58,7 +65,10 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+if (!localDockerHttp)
+{
+    app.UseHttpsRedirection();
+}
 app.UseStaticFiles();
 
 app.UseRequestLocalization(new RequestLocalizationOptions()

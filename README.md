@@ -56,12 +56,13 @@ uses English with a dot decimal separator (for example `10.5`).
 
 - Verify Azure uploads against your real storage account using [the Azure checklist](docs/Azure_Image_Setup.md).
   Upload routes, MVC forms, private image delivery and the database migration are implemented.
-- Docker image and verified container-to-API login/data flow.
+- Verify the Docker image and container-to-API login flow locally using [Docker setup](docs/Docker_Setup.md).
+  The Dockerfile, local demo profile and CI container build/home-page check are now included.
 - Local SQL migration checks and browser checks at desktop and mobile sizes.
 - Fresh GitHub Actions evidence after pushing, 20+ meaningful Part 3 commits,
   final screenshots and the Part 3 demonstration video.
 
-Docker and real-cloud/browser verification remain outstanding. See
+Docker Desktop execution and final evidence collection remain outstanding. See
 [Part 3 patch verification](docs/Part3_Mvc_CI_Verification.md).
 
 ## Implementation Notes
@@ -291,7 +292,7 @@ store a date of birth.
 
 The MVC/Azure code was checked on Linux with .NET SDK 8.0.427 (Azure storage is replaced with an in-memory fake in automated tests):
 
-**67 passed — 0 failed — 0 skipped.**
+**73 passed — 0 failed — 0 skipped.**
 
 | Test class | Cases | Coverage |
 |---|---:|---|
@@ -301,7 +302,8 @@ The MVC/Azure code was checked on Linux with .NET SDK 8.0.427 (Azure storage is 
 | `CategoryAndResultTests` | 17 | Category restrictions, result validation and access |
 | `MvcSmokeTests` | 18 | Razor rendering, session forwarding/isolation, role restrictions, expiry and antiforgery |
 | `ImageUploadTests` | 8 | Upload/download, replacement, privacy, ownership, invalid/oversized files and storage failure |
-| **Total** | **67** | |
+| `DockerConfigurationTests` | 6 | HTTP demo sessions, HTTPS defaults and Production guard |
+| **Total** | **73** | |
 
 ### Run in Visual Studio
 
@@ -325,7 +327,7 @@ integration testing of relational constraints and migrations.
 ### Previous Part 2 Test Evidence
 
 The image below records the original 41-test suite. Capture new Part 3 evidence
-after applying the patch and running all 67 cases.
+after applying the patch and running all 73 cases.
 
 ![Visual Studio showing all 41 tests passing](docs/images/tests-passed.png)
 
@@ -367,3 +369,12 @@ including:
 Luxolo Maqashalala  
 ST10465745  
 PROG6212 Part 2
+
+## Docker demonstration
+
+See [the complete Windows Docker walkthrough](docs/Docker_Setup.md). It includes
+installation checks, API startup, image build/run commands, troubleshooting and
+required evidence. MVC runs at `http://localhost:8080`, with the API on Windows
+at port 5000 and Azure credentials kept in the API's User Secrets. Local HTTP demo
+mode is opt-in and rejected outside Development. CI checks image build and home-page
+startup; the full LocalDB/Azure login flow must also be tested on your PC.
