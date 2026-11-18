@@ -81,13 +81,19 @@ public class ImagesController(RaceDayDbContext db, IImageStorage storage,
         }
         catch (Exception ex) when (IsStorageFailure(ex))
         {
-            // Avoid logging credentials that may appear in SDK configuration exceptions.
-            _logger.LogError(
-                ex,
-                "Azure image upload failed. Status: {Status}, ErrorCode: {ErrorCode}, Message: {Message}",
-                ex.Status,
-                ex.ErrorCode,
-                ex.Message);
+            var azureException = ex as RequestFailedException;
+
+            // Log diagnostic information without exposing connection strings or credentials.
+            logger.LogError(
+                "Azure image upload failed. FailureType: {FailureType}, Status: {Status}, ErrorCode: {ErrorCode}",
+                ex.GetType().Name,
+                azureException?.Status,
+                azureException?.ErrorCode);
+
+            return Problem(
+                statusCode: 503,
+                title: "Image storage is unavailable.",
+                detail: "The image could not be uploaded. Please try again later.");
         }
     }
 
